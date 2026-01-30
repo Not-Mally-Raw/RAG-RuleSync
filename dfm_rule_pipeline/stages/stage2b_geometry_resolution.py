@@ -8,50 +8,73 @@ from schema.feature_schema import features_dict
 # --------------------------------------------------
 # Mapped STRICTLY to schema/feature_schema.py keys
 ENTITY_NORMALIZATION = {
-    # Holes
+    # --- COMMON GEOMETRY ---
     "hole": "Hole",
     "holes": "Hole",
     "adjacent holes": "Hole",
-
-    # Counterbore (Schema: CBHole)
-    "counterbore": "CBHole",
-    "counterbores": "CBHole",
-
-    # Countersink (Schema: CSHole)
-    "countersunk hole": "CSHole",
-    "countersunk holes": "CSHole",
-    "cs hole": "CSHole",
-    "countersink": "CSHole",  # <--- NEW
-    "countersinks": "CSHole", # <--- NEW
-
-    # Emboss
-    "emboss": "Emboss",
-    "embosses": "Emboss",
-    "emboss feature": "Emboss",
-
-    # Dimple (Schema: Dimple)
-    "dimple": "Dimple",       # <--- NEW
-    "dimples": "Dimple",      # <--- NEW
-
-    # Curl (Schema: RolledHem or Curl depending on schema map)
-    # Checking your schema: 'Curl' maps to 'RolledHem' in GEOMETRY_ENTITY_CANONICAL_MAP
-    # But usually 'RolledHem' is the object name in 'Sheetmetal' string.
-    "curl": "RolledHem",      # <--- NEW
-    "curls": "RolledHem",     # <--- NEW
-
-    # Bend
+    "edge": "PartEdge",
+    "edges": "PartEdge",
+    "edge of a hole": "PartEdge",
+    "part edge": "PartEdge",
+    
+    # --- SHEET METAL ---
     "bend": "Bend",
     "bends": "Bend",
     "bend line": "Bend",
+    "flange": "Flange",
+    "flanges": "Flange",
+    "cutout": "Cutout",
+    "cutouts": "Cutout",
+    "hem": "Hem",
+    "hems": "Hem",
+    "curl": "RolledHem",
+    "curls": "RolledHem",
+    "rolled hem": "RolledHem",
+    "bridge": "Bridge",
+    "bridges": "Bridge",
+    "gusset": "Gusset",
+    "gussets": "Gusset",
+    "lance": "Lance",
+    "louver": "Louver",
+    "notch": "Notch",
+    "dowel": "Dowel",
+    "card guide": "CardGuide",
+    "spoon": "Spoon",
+    "emboss": "Emboss",
+    "embosses": "Emboss",
+    "emboss feature": "Emboss",
+    "extruded hole": "ExtrudedHole",
+    "dimple": "Dimple",
+    "dimples": "Dimple",
+    "slot": "SimpleCutout",
+    "tab": "Tab",
+    "weld": "Weld",
 
-    # Edge (Schema: PartEdge)
-    "edge": "PartEdge",
-    "edges": "PartEdge",
-    "edge of a hole": "PartEdge", # <--- Handles complex edge phrases
+    # --- MACHINING (MILL/TURN/DRILL) ---
+    "counterbore": "CBHole",
+    "counterbores": "CBHole",
+    "countersunk hole": "CSHole",
+    "countersunk holes": "CSHole",
+    "cs hole": "CSHole",
+    "countersink": "CSHole",
+    "countersinks": "CSHole",
+    "pocket": "Pocket",
+    "fillet": "Fillet",
+    "bored hole": "BoredHole", # Turn specific
+
+    # --- INJECTION MOLDING / DIE CASTING ---
+    "boss": "Boss",
+    "rib": "Rib",
+    "wall": "Wall",
+    
+    # --- ASSEMBLY / TUBING ---
+    "bolt": "Bolt",
+    "tube": "Tube",
+    "pipe": "Tube"
 }
 
 def normalize_entity(raw: str):
-    if not raw:
+    if not raw: 
         return None
 
     text = raw.lower().strip()

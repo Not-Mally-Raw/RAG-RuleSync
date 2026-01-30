@@ -14,12 +14,11 @@ from stages.stage2_attribute_resolution import requires_ast
 from ast_engine.ast_validator import ASTValidator
 from schema.ast_schema import serialize_ast
 
-# 1. NEW IMPORT
+# 1. IMPORT FEATURES DICT
 from schema.feature_schema import features_dict 
 
 OUTPUT_FILE = "output/dfm_results.csv"
 
-# Added "domain" to headers
 CSV_HEADERS = [
     "rule_text", "status", "resolution_status", "formalism", 
     "rule_json", "equation", "ast", "reasoning", "error", "domain"
@@ -42,22 +41,46 @@ def append_result(row: dict):
         if not exists: writer.writeheader()
         writer.writerow(safe)
 
-INTRINSIC_ATTRS = {"width", "height", "depth", "radius", "diameter", "thickness", "length", "angle"}
-
 def is_intrinsic_dimension(intent: dict) -> bool:
+    INTRINSIC_ATTRS = {"width", "height", "depth", "radius", "diameter", "thickness", "length", "angle"}
     attrs = intent.get("mentioned_attributes", [])
     return any(a.lower() in INTRINSIC_ATTRS for a in attrs)
 
+# --- NEW HELPER: DOMAIN NORMALIZER ---
+def normalize_domain_key(raw_domain: str) -> str:
+    """
+    Matches input 'SheetMetal' to system key 'Sheetmetal' (Case-insensitive).
+    Returns 'General' if no match found.
+    """
+    if not raw_domain: return "General"
+    
+    # 1. Exact Match
+    if raw_domain in features_dict:
+        return raw_domain
+        
+    # 2. Case-Insensitive Match
+    raw_lower = raw_domain.lower()
+    for key in features_dict.keys():
+        if key.lower() == raw_lower:
+            return key
+            
+    # 3. Fallback
+    return "General"
+
 def run_pipeline(llm, rules_data):
-    print("🔥 ENTERED run_pipeline")
+    print("🔥 ENTERED run_pipeline (Explicit Domain Mode)")
 
     for entry in tqdm(rules_data, desc="Processing Rules"):
         rule_text = entry.get("rule_text") if isinstance(entry, dict) else str(entry)
+        
+        # --- NEW: EXTRACT EXPLICIT DOMAIN ---
+        explicit_domain = entry.get("rule_type") # e.g., "SheetMetal"
+        
         if not rule_text or not rule_text.strip(): continue
         rule_text = rule_text.strip()
 
         try:
-            # STAGE 1
+            # STAGE 1: Intent
             intent = extract_intent(llm, rule_text)
             rule_intent = intent["rule_intent"]
 
@@ -66,23 +89,30 @@ def run_pipeline(llm, rules_data):
                     "rule_text": rule_text,
                     "status": "Skipped",
                     "resolution_status": "skipped",
-                    "reasoning": intent.get("reasoning")
+                    "reasoning": intent.get("reasoning"),
+                    "domain": explicit_domain or "Unknown"
                 })
                 continue
 
-            # STAGE 2
-            # Updated to pass rule_text for keyword matching
+            # STAGE 2: Category & Domain Resolution
+            # We still run this to get the 'Category' (Geometry vs Attribute)
             resolution = resolve_rule_category_and_domain(intent, rule_text)
             category = resolution["rule_category"]
-            intent["domain"] = resolution["primary_domain"]
+            
+            # --- CRITICAL FIX: OVERRIDE DOMAIN ---
+            if explicit_domain:
+                # Use the JSON's domain, normalized to match our Schema Keys
+                intent["domain"] = normalize_domain_key(explicit_domain)
+            else:
+                # Fallback to keyword guessing
+                intent["domain"] = resolution["primary_domain"]
 
+            # Schema Context Loading (Now guaranteed correct)
+            schema_text = features_dict.get(intent["domain"], "")
+
+            # Category Correction (Geometry -> Attribute for intrinsic)
             if category == "Geometry" and is_intrinsic_dimension(intent):
                 category = "Attribute"
-
-            # 2. RESOLVE SCHEMA TEXT
-            # Default to 'Sheetmetal' or 'General' if domain is missing/unknown to allow fallback
-            domain_key = intent["domain"] if intent["domain"] in features_dict else "Sheetmetal"
-            schema_text = features_dict.get(domain_key, "")
 
             # STAGE 2b: Geometry
             if category == "Geometry":
@@ -114,12 +144,11 @@ def run_pipeline(llm, rules_data):
 
             # STAGE 3: Attribute
             if category == "Attribute":
-                # 3. PASS REAL SCHEMA TEXT
                 result = formalize_attribute_rule(
                     llm,
                     rule_text,
                     intent,
-                    schema_context=schema_text  # <--- NOW PASSING REAL DATA
+                    schema_context=schema_text  # Passing the CORRECT schema now
                 )
 
                 if result.get("formalism") == "equation":
@@ -134,7 +163,7 @@ def run_pipeline(llm, rules_data):
                     })
                     continue
 
-                # AST fallback (omitted for brevity, keeping your existing logic...)
+                # AST Validation
                 validator = ASTValidator(allowed_variables={"ModuleParams", "Bend", "Hole", "Slot", "Emboss", "Counterbore"})
                 if result.get("formalism") == "AST" and validator.validate(result["ast"]):
                     append_result({
@@ -157,15 +186,13 @@ def run_pipeline(llm, rules_data):
                 })
                 continue
 
-            # Fallback (Generic Formalizer)
-            # ... (Rest of your fallback logic)
-
         except Exception as e:
             append_result({
                 "rule_text": rule_text,
                 "status": "Review Needed",
                 "resolution_status": "failed",
-                "error": str(e)
+                "error": str(e),
+                "domain": entry.get("rule_type", "Unknown")
             })
 
     print("✅ Pipeline complete:", OUTPUT_FILE)

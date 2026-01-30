@@ -45,6 +45,7 @@ htmlcov/
 
 # Local outputs and generated data (do not commit)
 output/
+dfm_rule_pipeline/output/
 data/
 *.pid
 

@@ -1,0 +1,441 @@
+{
+  "consolidated_at": "2026-01-27T10:45:00.000000",
+  "total_documents": 2,
+  "total_rules": 26,
+  "documents": [
+    {
+      "source_pdf": "DFXRuleSample.xlsx - SheetMetal.csv",
+      "rule_count": 20,
+      "rules": [
+        {
+          "rule_text": "Distance between bridges should  be atleast 4.5 times sheet thickness",
+          "rule_type": "SheetMetal",
+          "applicability_constraints": {
+            "material": "any",
+            "process": "sheet metal fabrication",
+            "feature": "bridge",
+            "location": "relative positioning"
+          },
+          "dimensional_constraints": [
+            "Distance >= 4.5 times sheet thickness"
+          ],
+          "relational_constraints": [
+            "Distance between bridge features"
+          ]
+        },
+        {
+          "rule_text": "Card guide length should be at most 127.0 mm and the opening angle should be at least 15.0 degrees.",
+          "rule_type": "SheetMetal",
+          "applicability_constraints": {
+            "material": "any",
+            "process": "sheet metal fabrication",
+            "feature": "card guide",
+            "location": "any"
+          },
+          "dimensional_constraints": [
+            "Length <= 127.0 mm",
+            "Angle >= 15.0 degrees"
+          ],
+          "relational_constraints": [
+            "None"
+          ]
+        },
+        {
+          "rule_text": "Distance between card guide form and bend should be at least 5.0 times sheet thickness",
+          "rule_type": "SheetMetal",
+          "applicability_constraints": {
+            "material": "any",
+            "process": "sheet metal fabrication",
+            "feature": "card guide",
+            "location": "relative positioning"
+          },
+          "dimensional_constraints": [
+            "Distance >= 5.0 times sheet thickness"
+          ],
+          "relational_constraints": [
+            "Distance between card guide and bend"
+          ]
+        },
+        {
+          "rule_text": "Distance between curl and bends should be at least 4.5 times sheet thickness plus twice the rolled hem radius",
+          "rule_type": "SheetMetal",
+          "applicability_constraints": {
+            "material": "any",
+            "process": "sheet metal fabrication",
+            "feature": "curl",
+            "location": "relative positioning"
+          },
+          "dimensional_constraints": [
+            "Distance >= 4.5 times sheet thickness + 2 * radius"
+          ],
+          "relational_constraints": [
+            "Distance between curl and bend"
+          ]
+        },
+        {
+          "rule_text": "Distance between cutout and bends should be at least 3.0 times sheet thickness plus the bend radius",
+          "rule_type": "SheetMetal",
+          "applicability_constraints": {
+            "material": "any",
+            "process": "sheet metal fabrication",
+            "feature": "cutout",
+            "location": "relative positioning"
+          },
+          "dimensional_constraints": [
+            "Distance >= 3.0 times sheet thickness + radius"
+          ],
+          "relational_constraints": [
+            "Distance between cutout and bend"
+          ]
+        },
+        {
+          "rule_text": "Distance between cutout and holes should be at least 2.0 times sheet thickness",
+          "rule_type": "SheetMetal",
+          "applicability_constraints": {
+            "material": "any",
+            "process": "sheet metal fabrication",
+            "feature": "cutout",
+            "location": "relative positioning"
+          },
+          "dimensional_constraints": [
+            "Distance >= 2.0 times sheet thickness"
+          ],
+          "relational_constraints": [
+            "Distance between cutout and hole"
+          ]
+        },
+        {
+          "rule_text": "Cutout corner radius should be at least 1.0 times sheet thickness",
+          "rule_type": "SheetMetal",
+          "applicability_constraints": {
+            "material": "any",
+            "process": "sheet metal fabrication",
+            "feature": "cutout",
+            "location": "any"
+          },
+          "dimensional_constraints": [
+            "Radius >= 1.0 times sheet thickness"
+          ],
+          "relational_constraints": [
+            "None"
+          ]
+        },
+        {
+          "rule_text": "Dowel diameter should be at most 12.7 mm and diameter height should be at most 3.175 mm",
+          "rule_type": "SheetMetal",
+          "applicability_constraints": {
+            "material": "any",
+            "process": "sheet metal fabrication",
+            "feature": "dowel",
+            "location": "any"
+          },
+          "dimensional_constraints": [
+            "Diameter <= 12.7 mm",
+            "Height <= 3.175 mm"
+          ],
+          "relational_constraints": [
+            "None"
+          ]
+        },
+        {
+          "rule_text": "Distance between dowel and bend should be at least 4.0 times sheet thickness plus the bend radius",
+          "rule_type": "SheetMetal",
+          "applicability_constraints": {
+            "material": "any",
+            "process": "sheet metal fabrication",
+            "feature": "dowel",
+            "location": "relative positioning"
+          },
+          "dimensional_constraints": [
+            "Distance >= 4.0 times sheet thickness + radius"
+          ],
+          "relational_constraints": [
+            "Distance between dowel and bend"
+          ]
+        },
+        {
+          "rule_text": "Distance between dowel and cutouts should be at least 4.0 times sheet thickness",
+          "rule_type": "SheetMetal",
+          "applicability_constraints": {
+            "material": "any",
+            "process": "sheet metal fabrication",
+            "feature": "dowel",
+            "location": "relative positioning"
+          },
+          "dimensional_constraints": [
+            "Distance >= 4.0 times sheet thickness"
+          ],
+          "relational_constraints": [
+            "Distance between dowel and cutout"
+          ]
+        },
+        {
+          "rule_text": "Distance between extruded hole and part edge should be at least 3.0 times sheet thickness",
+          "rule_type": "SheetMetal",
+          "applicability_constraints": {
+            "material": "any",
+            "process": "sheet metal fabrication",
+            "feature": "extruded hole",
+            "location": "relative positioning"
+          },
+          "dimensional_constraints": [
+            "Distance >= 3.0 times sheet thickness"
+          ],
+          "relational_constraints": [
+            "Distance to edge"
+          ]
+        },
+        {
+          "rule_text": "Distance between extruded hole and bend should be at least 3.0 times sheet thickness plus bend radius",
+          "rule_type": "SheetMetal",
+          "applicability_constraints": {
+            "material": "any",
+            "process": "sheet metal fabrication",
+            "feature": "extruded hole",
+            "location": "relative positioning"
+          },
+          "dimensional_constraints": [
+            "Distance >= 3.0 times sheet thickness + radius"
+          ],
+          "relational_constraints": [
+            "Distance between extruded hole and bend"
+          ]
+        },
+        {
+          "rule_text": "For part with material 6061-T6 the flange radius should be atleast 1.0 mm and the length should be 6.0 mm. The sheet thickness for the part with material 6061-T6 should be atleast 2.0 mm.",
+          "rule_type": "SheetMetal",
+          "applicability_constraints": {
+            "material": "6061-T6",
+            "process": "sheet metal fabrication",
+            "feature": "flange",
+            "location": "any"
+          },
+          "dimensional_constraints": [
+            "Radius >= 1.0 mm",
+            "Length >= 6.0 mm",
+            "Thickness >= 2.0 mm"
+          ],
+          "relational_constraints": [
+            "None"
+          ]
+        },
+        {
+          "rule_text": "For a spoon feature the minimum width should be atleast 0.8 times sheet thickness, minimum length should be atleast 10.0 times sheet thickness, minimum height should be between 0.5 and 1.2 times sheet thickness",
+          "rule_type": "SheetMetal",
+          "applicability_constraints": {
+            "material": "any",
+            "process": "sheet metal fabrication",
+            "feature": "spoon",
+            "location": "any"
+          },
+          "dimensional_constraints": [
+            "Width >= 0.8 times sheet thickness",
+            "Length >= 10.0 times sheet thickness",
+            "0.5 <= Height <= 1.2 times sheet thickness"
+          ],
+          "relational_constraints": [
+            "None"
+          ]
+        },
+        {
+          "rule_text": "Distance between gusset and hole should be at least 8.0 times sheet thickness plus gusset width",
+          "rule_type": "SheetMetal",
+          "applicability_constraints": {
+            "material": "any",
+            "process": "sheet metal fabrication",
+            "feature": "gusset",
+            "location": "relative positioning"
+          },
+          "dimensional_constraints": [
+            "Distance >= 8.0 times sheet thickness + width"
+          ],
+          "relational_constraints": [
+            "Distance between gusset and hole"
+          ]
+        },
+        {
+          "rule_text": "Distance between hem and bend should be at least 5.0 times sheet thickness",
+          "rule_type": "SheetMetal",
+          "applicability_constraints": {
+            "material": "any",
+            "process": "sheet metal fabrication",
+            "feature": "hem",
+            "location": "relative positioning"
+          },
+          "dimensional_constraints": [
+            "Distance >= 5.0 times sheet thickness"
+          ],
+          "relational_constraints": [
+            "Distance between hem and bend"
+          ]
+        },
+        {
+          "rule_text": "Distance between hem and hole should be at least 2.0 times sheet thickness plus hem radius",
+          "rule_type": "SheetMetal",
+          "applicability_constraints": {
+            "material": "any",
+            "process": "sheet metal fabrication",
+            "feature": "hem",
+            "location": "relative positioning"
+          },
+          "dimensional_constraints": [
+            "Distance >= 2.0 times sheet thickness + radius"
+          ],
+          "relational_constraints": [
+            "Distance between hem and hole"
+          ]
+        },
+        {
+          "rule_text": "Distance between lance and bend should be at least 8.0 times sheet thickness plus bend radius",
+          "rule_type": "SheetMetal",
+          "applicability_constraints": {
+            "material": "any",
+            "process": "sheet metal fabrication",
+            "feature": "lance",
+            "location": "relative positioning"
+          },
+          "dimensional_constraints": [
+            "Distance >= 8.0 times sheet thickness + radius"
+          ],
+          "relational_constraints": [
+            "Distance between lance and bend"
+          ]
+        },
+        {
+          "rule_text": "Distance between louver and bend should be at least 6.0 times sheet thickness plus bend radius",
+          "rule_type": "SheetMetal",
+          "applicability_constraints": {
+            "material": "any",
+            "process": "sheet metal fabrication",
+            "feature": "louver",
+            "location": "relative positioning"
+          },
+          "dimensional_constraints": [
+            "Distance >= 6.0 times sheet thickness + radius"
+          ],
+          "relational_constraints": [
+            "Distance between louver and bend"
+          ]
+        },
+        {
+          "rule_text": "Distance between notch and bend should be at least 8.0 times sheet thickness plus bend radius",
+          "rule_type": "SheetMetal",
+          "applicability_constraints": {
+            "material": "any",
+            "process": "sheet metal fabrication",
+            "feature": "notch",
+            "location": "relative positioning"
+          },
+          "dimensional_constraints": [
+            "Distance >= 8.0 times sheet thickness + radius"
+          ],
+          "relational_constraints": [
+            "Distance between notch and bend"
+          ]
+        }
+      ]
+    },
+    {
+      "source_pdf": "DFXRuleSample.xlsx - SMForm.csv",
+      "rule_count": 6,
+      "rules": [
+        {
+          "rule_text": "Distance between holes should be at least 2.0 times the sheet metal nominal thickness.",
+          "rule_type": "SMForm",
+          "applicability_constraints": {
+            "material": "any",
+            "process": "sheet metal fabrication",
+            "feature": "hole",
+            "location": "relative positioning"
+          },
+          "dimensional_constraints": [
+            "Distance >= 2.0 times thickness"
+          ],
+          "relational_constraints": [
+            "Distance between hole features"
+          ]
+        },
+        {
+          "rule_text": "Distance between hole and bend should be at least 2.5 times the sheet metal nominal thickness.",
+          "rule_type": "SMForm",
+          "applicability_constraints": {
+            "material": "any",
+            "process": "sheet metal fabrication",
+            "feature": "hole",
+            "location": "relative positioning"
+          },
+          "dimensional_constraints": [
+            "Distance >= 2.5 times thickness"
+          ],
+          "relational_constraints": [
+            "Distance between hole and bend"
+          ]
+        },
+        {
+          "rule_text": "Distance between hole and part edge should be at least 2.0 times the sheet metal nominal thickness.",
+          "rule_type": "SMForm",
+          "applicability_constraints": {
+            "material": "any",
+            "process": "sheet metal fabrication",
+            "feature": "hole",
+            "location": "relative positioning"
+          },
+          "dimensional_constraints": [
+            "Distance >= 2.0 times thickness"
+          ],
+          "relational_constraints": [
+            "Distance to edge"
+          ]
+        },
+        {
+          "rule_text": "Bend radius should be at least 1.3 times the sheet metal nominal thickness.",
+          "rule_type": "SMForm",
+          "applicability_constraints": {
+            "material": "any",
+            "process": "sheet metal fabrication",
+            "feature": "bend",
+            "location": "any"
+          },
+          "dimensional_constraints": [
+            "Radius >= 1.3 times thickness"
+          ],
+          "relational_constraints": [
+            "None"
+          ]
+        },
+        {
+          "rule_text": "Sheet thickness should be at least 1.0 unit.",
+          "rule_type": "SMForm",
+          "applicability_constraints": {
+            "material": "any",
+            "process": "sheet metal fabrication",
+            "feature": "general",
+            "location": "any"
+          },
+          "dimensional_constraints": [
+            "Thickness >= 1.0 unit"
+          ],
+          "relational_constraints": [
+            "None"
+          ]
+        },
+        {
+          "rule_text": "Hole diameter should be at least 1.0 times the sheet metal nominal thickness.",
+          "rule_type": "SMForm",
+          "applicability_constraints": {
+            "material": "any",
+            "process": "sheet metal fabrication",
+            "feature": "hole",
+            "location": "any"
+          },
+          "dimensional_constraints": [
+            "Diameter >= 1.0 times thickness"
+          ],
+          "relational_constraints": [
+            "None"
+          ]
+        }
+      ]
+    }
+  ]
+}
