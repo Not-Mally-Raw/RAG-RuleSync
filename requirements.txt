@@ -1,5 +1,5 @@
 # Core Dependencies - Production Pinned Versions
-langchain==0.2.12
+langchain==1.2.3
 langchain-groq==0.1.6
 langchain-community==0.2.9
 langchain-core==0.2.27
