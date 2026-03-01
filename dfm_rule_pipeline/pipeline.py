@@ -46,35 +46,42 @@ def is_intrinsic_dimension(intent: dict) -> bool:
     attrs = intent.get("mentioned_attributes", [])
     return any(a.lower() in INTRINSIC_ATTRS for a in attrs)
 
-# --- NEW HELPER: DOMAIN NORMALIZER ---
+# --- RECTIFIED HELPER: ROBUST DOMAIN NORMALIZER ---
 def normalize_domain_key(raw_domain: str) -> str:
     """
-    Matches input 'SheetMetal' to system key 'Sheetmetal' (Case-insensitive).
-    Returns 'General' if no match found.
+    Standardizes input (e.g., 'Sheet Metal') to match features_dict keys (e.g., 'Sheetmetal').
+    Priority 2: Prevent fallback to 'General' when a specific intent exists.
     """
     if not raw_domain: return "General"
     
-    # 1. Exact Match
-    if raw_domain in features_dict:
-        return raw_domain
-        
-    # 2. Case-Insensitive Match
-    raw_lower = raw_domain.lower()
+    # Clean string for comparison
+    clean_input = raw_domain.strip().lower().replace(" ", "")
+    
+    # 1. Direct key search (Sheetmetal vs Sheet Metal)
     for key in features_dict.keys():
-        if key.lower() == raw_lower:
+        if key.lower().replace(" ", "") == clean_input:
             return key
             
-    # 3. Fallback
-    return "General"
+    # 2. Specific Mapping for common XLSX variations
+    mapping = {
+        "sheetmetal": "Sheetmetal",
+        "sheetmetalforming": "SMForm",
+        "smf": "SMForm",
+        "injectionmolding": "Injection Moulding",
+        "molding": "Injection Moulding",
+        "diecasting": "Die Cast",
+        "additivemanufacturing": "Additive",
+        "assembly": "Assembly"
+    }
+    
+    return mapping.get(clean_input, "General")
 
 def run_pipeline(llm, rules_data):
-    print("🔥 ENTERED run_pipeline (Explicit Domain Mode)")
+    print("🔥 ENTERED run_pipeline (Strict Category Mode)")
 
     for entry in tqdm(rules_data, desc="Processing Rules"):
         rule_text = entry.get("rule_text") if isinstance(entry, dict) else str(entry)
-        
-        # --- NEW: EXTRACT EXPLICIT DOMAIN ---
-        explicit_domain = entry.get("rule_type") # e.g., "SheetMetal"
+        explicit_domain = entry.get("rule_type") # This comes from XLSX 'Category'
         
         if not rule_text or not rule_text.strip(): continue
         rule_text = rule_text.strip()
@@ -82,117 +89,66 @@ def run_pipeline(llm, rules_data):
         try:
             # STAGE 1: Intent
             intent = extract_intent(llm, rule_text)
+            
+            # --- PRIORITY 1: EXPLICIT CATEGORY OVERRIDE ---
+            if explicit_domain:
+                intent["domain"] = normalize_domain_key(explicit_domain)
+            
             rule_intent = intent["rule_intent"]
-
             if not rule_intent.get("is_quantifiable", False):
                 append_result({
-                    "rule_text": rule_text,
-                    "status": "Skipped",
-                    "resolution_status": "skipped",
-                    "reasoning": intent.get("reasoning"),
-                    "domain": explicit_domain or "Unknown"
+                    "rule_text": rule_text, "status": "Skipped", "resolution_status": "skipped",
+                    "reasoning": intent.get("reasoning"), "domain": intent.get("domain", "Unknown")
                 })
                 continue
 
-            # STAGE 2: Category & Domain Resolution
-            # We still run this to get the 'Category' (Geometry vs Attribute)
+            # STAGE 2: Category Resolution (Keep Category, but protect Domain)
             resolution = resolve_rule_category_and_domain(intent, rule_text)
             category = resolution["rule_category"]
             
-            # --- CRITICAL FIX: OVERRIDE DOMAIN ---
-            if explicit_domain:
-                # Use the JSON's domain, normalized to match our Schema Keys
-                intent["domain"] = normalize_domain_key(explicit_domain)
-            else:
-                # Fallback to keyword guessing
-                intent["domain"] = resolution["primary_domain"]
+            # Only use guesser if explicit_domain was missing or yielded 'General'
+            if not explicit_domain or intent["domain"] == "General":
+                 intent["domain"] = resolution["primary_domain"]
 
-            # Schema Context Loading (Now guaranteed correct)
+            # CRITICAL: Re-check normalization to ensure key exists in features_dict
+            intent["domain"] = normalize_domain_key(intent["domain"])
             schema_text = features_dict.get(intent["domain"], "")
 
-            # Category Correction (Geometry -> Attribute for intrinsic)
+            # Intrinsic dimension check
             if category == "Geometry" and is_intrinsic_dimension(intent):
                 category = "Attribute"
 
-            # STAGE 2b: Geometry
+            # Route to correct stage based on determined Category
             if category == "Geometry":
                 geo = resolve_geometry(llm, rule_text, intent)
                 append_result({
-                    "rule_text": rule_text,
-                    "status": "Deferred",
-                    "resolution_status": "deferred_geometry",
-                    "formalism": "Geometry",
-                    "rule_json": geo.get("geometry"),
-                    "reasoning": geo.get("reasoning"),
-                    "domain": intent["domain"]
+                    "rule_text": rule_text, "status": "Deferred", "resolution_status": "deferred_geometry",
+                    "formalism": "Geometry", "rule_json": geo.get("geometry"), 
+                    "reasoning": geo.get("reasoning"), "domain": intent["domain"]
                 })
-                continue
-
-            # STAGE 2c: Tolerance
-            if category == "Tolerance":
+            elif category == "Tolerance":
                 tol = resolve_tolerance(llm, rule_text, intent)
                 append_result({
-                    "rule_text": rule_text,
-                    "status": "Deferred",
-                    "resolution_status": "deferred_tolerance",
+                    "rule_text": rule_text, "status": "Deferred", "resolution_status": "deferred_tolerance",
                     "formalism": "Tolerance" if tol.get("tolerance_valid") else None,
-                    "equation": tol.get("equation"),
-                    "reasoning": tol.get("reasoning"),
-                    "domain": intent["domain"]
+                    "equation": tol.get("equation"), "reasoning": tol.get("reasoning"), "domain": intent["domain"]
                 })
-                continue
-
-            # STAGE 3: Attribute
-            if category == "Attribute":
-                result = formalize_attribute_rule(
-                    llm,
-                    rule_text,
-                    intent,
-                    schema_context=schema_text  # Passing the CORRECT schema now
-                )
-
+            elif category == "Attribute":
+                result = formalize_attribute_rule(llm, rule_text, intent, schema_context=schema_text)
+                
+                # Equation or AST handling
                 if result.get("formalism") == "equation":
                     append_result({
-                        "rule_text": rule_text,
-                        "status": "Success",
-                        "resolution_status": "formalized",
-                        "formalism": "equation",
-                        "equation": result["equation"],
-                        "reasoning": result["reasoning"],
-                        "domain": intent["domain"]
+                        "rule_text": rule_text, "status": "Success", "resolution_status": "formalized",
+                        "formalism": "equation", "equation": result["equation"],
+                        "reasoning": result["reasoning"], "domain": intent["domain"]
                     })
-                    continue
-
-                # AST Validation
-                validator = ASTValidator(allowed_variables={"ModuleParams", "Bend", "Hole", "Slot", "Emboss", "Counterbore"})
-                if result.get("formalism") == "AST" and validator.validate(result["ast"]):
+                else:
                     append_result({
-                        "rule_text": rule_text,
-                        "status": "Success",
-                        "resolution_status": "formalized",
-                        "formalism": "AST",
-                        "ast": serialize_ast(result["ast"]),
-                        "reasoning": result["reasoning"],
-                        "domain": intent["domain"]
+                        "rule_text": rule_text, "status": "Deferred", "resolution_status": "deferred_attribute",
+                        "reasoning": result.get("reasoning"), "domain": intent["domain"]
                     })
-                    continue
-                
-                append_result({
-                    "rule_text": rule_text,
-                    "status": "Deferred",
-                    "resolution_status": "deferred_attribute",
-                    "reasoning": result.get("reasoning"),
-                    "domain": intent["domain"]
-                })
-                continue
-
         except Exception as e:
-            append_result({
-                "rule_text": rule_text,
-                "status": "Review Needed",
-                "resolution_status": "failed",
-                "error": str(e),
-                "domain": entry.get("rule_type", "Unknown")
-            })
+            append_result({"rule_text": rule_text, "status": "Review Needed", "error": str(e), "domain": explicit_domain})
 
     print("✅ Pipeline complete:", OUTPUT_FILE)

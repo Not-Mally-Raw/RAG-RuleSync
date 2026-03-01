@@ -1,12 +1,8 @@
 import json
 from schema.feature_schema import features_dict
 
-# -------------------------------------------------------------------
-# DOMAIN KEYWORD MAP (STRICT MAPPING)
-# -------------------------------------------------------------------
-# These keywords strongly suggest a specific domain.
 DOMAIN_KEYWORDS = {
-    "Sheetmetal": ["sheet metal", "bend", "flange", "hem", "cutout", "emboss", "gusset", "louver", "stamp"],
+    "Sheetmetal": ["sheet metal", "bend", "flange", "hem", "cutout", "emboss", "gusset", "louver", "stamp", "bridge", "spoon"],
     "Turn": ["turn", "groove", "bore", "relief"],
     "Mill": ["mill", "pocket", "fillet", "chamfer"],
     "Drill": ["drill", "counterbore", "countersink", "tapping"],
@@ -17,13 +13,10 @@ DOMAIN_KEYWORDS = {
     "Additive": ["additive", "3d print", "layer", "overhang"],
 }
 
-# -------------------------------------------------------------------
-# RULE CATEGORY + DOMAIN RESOLUTION
-# -------------------------------------------------------------------
 def resolve_rule_category_and_domain(intent: dict, rule_text: str = "") -> dict:
     rule_intent = intent.get("rule_intent", {})
     
-    # 1. Determine Category (Geometry, Tolerance, Attribute)
+    # 1. Determine Category
     rule_type = rule_intent.get("type", "advisory")
     requires_geometry = rule_intent.get("requires_geometry", False)
     requires_tolerance = rule_intent.get("requires_tolerance", False)
@@ -37,21 +30,18 @@ def resolve_rule_category_and_domain(intent: dict, rule_text: str = "") -> dict:
     else:
         category = "Attribute"
 
-    # 2. Determine Domain (Strict Dictionary Match)
-    detected_domain = "General" # Default fallback
+    # 2. Determine Domain (Only if not already set by explicit override)
+    # If the intent already has a domain from Priority 1, we preserve it.
+    current_domain = intent.get("domain", "General")
     
-    rule_lower = rule_text.lower()
+    if current_domain == "General":
+        rule_lower = rule_text.lower()
+        for domain, keywords in DOMAIN_KEYWORDS.items():
+            if any(k in rule_lower for k in keywords):
+                current_domain = domain
+                break
     
-    # Check for strong keyword matches
-    for domain, keywords in DOMAIN_KEYWORDS.items():
-        if any(k in rule_lower for k in keywords):
-            detected_domain = domain
-            break
-    
-    # Special Handling: If intent says "Sheetmetal" explicitly (from Stage 1 optional), trust it
-    # But for now, keyword matching is safer and deterministic.
-
     return {
         "rule_category": category,
-        "primary_domain": detected_domain
+        "primary_domain": current_domain
     }
