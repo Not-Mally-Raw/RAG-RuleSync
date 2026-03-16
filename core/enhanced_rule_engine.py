@@ -42,7 +42,7 @@ if TYPE_CHECKING:
 from .rule_extraction import DocumentLoader
 from .chunk_cache import ChunkCache, FileChunkCache
 from .prompts import PromptLibrary
-from utils import logger
+logger = logging.getLogger(__name__)
 
 # Configure structured logging
 structlog.configure(

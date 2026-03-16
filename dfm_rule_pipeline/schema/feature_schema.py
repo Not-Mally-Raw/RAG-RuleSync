@@ -1,4 +1,4 @@
-from features import features_dict
+from.features import features_dict
 
 def load_feature_schema() -> str:
     """

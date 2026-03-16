@@ -1,0 +1,10 @@
+{
+  "executionEnvironments": [
+    {
+      "root": "d:\\Downloads\\HCL_RAG_RAHUL_DAKSH\\RAG-RuleSync"
+    }
+  ],
+  "extraPaths": [
+    "d:\\Downloads\\HCL_RAG_RAHUL_DAKSH\\RAG-RuleSync"
+  ]
+}

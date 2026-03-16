@@ -103,7 +103,7 @@ def run_pipeline(llm, rules_data):
                 continue
 
             # STAGE 2: Category Resolution (Keep Category, but protect Domain)
-            resolution = resolve_rule_category_and_domain(intent, rule_text)
+            resolution = resolve_rule_category_and_domain(llm, intent, rule_text)
             category = resolution["rule_category"]
             
             # Only use guesser if explicit_domain was missing or yielded 'General'
