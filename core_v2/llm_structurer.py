@@ -6,24 +6,23 @@ from dataclasses import dataclass, field
 
 logger = logging.getLogger("LLMStructurer")
 
-STRUCTURING_PROMPT = """You are an expert Design-for-Manufacturability (DFM) rule extractor.
-You will be provided with a TARGET TEXT block and its SURROUNDING CONTEXT (Section title and neighboring sentences).
+STRUCTURING_PROMPT = """You are an expert Design-for-Manufacturability (DFM) rule extraction engine operating at LEVEL-1.
+You will be provided with a TARGET TEXT block (which contains multiple assembled text windows) and its SURROUNDING CONTEXT (Section title and neighboring sentences).
 
-Your objective is to extract distinct, quantifiable, and deterministic design constraints from the TARGET TEXT and format them into a precise JSON array.
+Your objective is to extract manufacturing rules EXACTLY as stated in the TARGET TEXT and perform lightweight context resolution, outputting a precise JSON array.
 
-### CORE EXTRACTION RULES:
-1. ONLY extract deterministic design rules (e.g., limits, dimensions, minimums, maximums, required distances, material conditions).
-2. DO NOT extract advisory statements, best practices without limits, or purely informational facts (e.g., "Lap-welded joints trap plating solutions", "Avoid large sheet metal parts").
-3. DO NOT extract rules that appear ONLY in the SURROUNDING CONTEXT. The context is only there to help you understand the TARGET TEXT.
-4. If the TARGET TEXT contains MULTIPLE distinct constraints, extract them as SEPARATE rule objects.
+### LEVEL-1 EXTRACTION RULES (CRITICAL):
+1. EXTRACT VERBATIM: The `rule_text` MUST be an exact, continuous substring extracted directly from the TARGET TEXT. Do NOT paraphrase, summarize, or alter the original text.
+2. NO ATOMICITY (DO NOT SPLIT): If a single sentence or contiguous block contains MULTIPLE constraints (e.g., "The minimum width is X, and the maximum length is Y"), extract the ENTIRE compound sentence as ONE single rule. Do NOT split it into separate objects. The downstream formalization pipeline will handle compound logic.
+3. NO HALLUCINATION: Do NOT extract rules that appear ONLY in the SURROUNDING CONTEXT. The context is strictly to help you resolve pronouns or missing subjects.
+4. QUANTIFIABLE CONSTRAINTS ONLY: Only extract rules containing deterministic bounds (e.g., minimums, maximums, numeric limits, material requirements, strict boolean states). Ignore purely informational advice without quantifiable bounds.
 
-### CONTEXT RESOLUTION (CRITICAL):
-Often, the TARGET TEXT is written in shorthand and inherits its subject from the Section Title or Previous Context. 
-For example, if the Section is "Countersinks" and the TARGET TEXT says "The maximum depth is 3.5 times the material thickness", the subject is missing.
-- rule_text: "The maximum depth is 3.5 times the material thickness"
-- resolved_rule_text: "The maximum depth of a countersink is 3.5 times the material thickness"
+### CONTEXT RESOLUTION:
+Manufacturing texts often use shorthand and inherit their subject from the Section Title or Previous Context. 
+For example, if the Section is "Countersinks" and the TARGET TEXT says "The maximum depth is 3.5 times the material thickness.", the subject "countersink" is missing.
 
-You MUST resolve pronouns ("it", "they") and missing subjects ("The minimum radius...") by looking at the SURROUNDING CONTEXT and replacing them with the explicit feature name in `resolved_rule_text`. If no resolution is needed, `resolved_rule_text` should perfectly match `rule_text`.
+You MUST populate `resolved_rule_text` by taking the exact `rule_text` and ONLY substituting pronouns ("it", "they") or prepending the missing subject derived from the SURROUNDING CONTEXT.
+If no resolution is needed, `resolved_rule_text` MUST perfectly match `rule_text`.
 
 SURROUNDING CONTEXT:
 {context_text}
@@ -34,8 +33,8 @@ TARGET TEXT:
 Respond ONLY with a valid JSON array of objects matching this exact schema. Do not use placeholders.
 [
   {{
-    "rule_text": "The maximum depth is 3.5 times the material thickness.",
-    "resolved_rule_text": "The maximum depth of a countersink is 3.5 times the material thickness."
+    "rule_text": "The minimum width of a closed lance is two times the material thickness or 1.60 mm, whichever is greater, and a maximum height of five times the material thickness.",
+    "resolved_rule_text": "The minimum width of a closed lance is two times the material thickness or 1.60 mm, whichever is greater, and a maximum height of five times the material thickness."
   }}
 ]
 """
