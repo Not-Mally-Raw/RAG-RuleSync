@@ -10,9 +10,6 @@ from stages.stage2c_tolerance_spec import resolve_tolerance
 from stages.stage3_formalization import formalize_rule
 from stages.stage4_self_validation import self_validate
 from stages.stage3_attribute_formalization import formalize_attribute_rule
-from stages.stage2_attribute_resolution import requires_ast
-from ast_engine.ast_validator import ASTValidator
-from schema.ast_schema import serialize_ast
 
 # 1. IMPORT FEATURES DICT
 from schema.feature_schema import features_dict 

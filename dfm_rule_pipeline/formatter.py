@@ -70,8 +70,7 @@ def substitute_variables(expression, domain_cfg):
     target_var = domain_cfg["ThickVar"]
     for alias in domain_cfg["Aliases"]:
         expression = expression.replace(alias, target_var)
-    expression = expression.replace("Distance(Hole, Hole)", "Distance.MinValue")
-    expression = expression.replace("Distance(", "Distance.MinValue") 
+    expression = re.sub(r"Distance\([^)]+\)", "Distance.MinValue", expression)
     return expression
 
 def normalize_algebra(lhs, operator, rhs, domain_cfg):

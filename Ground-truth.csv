@@ -1,0 +1,912 @@
+Category,Rule Text,Truth label,NORMAL RULE JSON
+Sheet Metal,Distance between curl and bends should be at least 4.5 times sheet thickness plus twice the rolled hem radius,"RuleCategory= Sheet Metal
+Name = Curl to Bend Distance
+
+Feature1 = Distance
+Feature2 = """" 
+Object1 = RolledHem
+Object2 = Bend
+
+ExpName = Distance.MinValue -( 2.0*RolledHem.Radius ) / SheetMetal.Thickness
+Operator = >=
+Recom = 4.5",
+Sheet Metal, Distance between curl and cutouts should be at least 3.0 times sheet thickness minus the rolled hem radius,"RuleCategory= Sheet Metal
+Name = Curl to Cutout Distance
+
+Feature1 = Distance
+Feature2 = """" 
+Object1 = RolledHem
+Object2 = Cutout
+
+ExpName = (Distance.MinValue-RolledHem.Radius)/SheetMetal.Thickness
+Operator = >=
+Recom = 3.0
+",
+Sheet Metal,Distance between cutout and part edge should be at least 2.0 times sheet thickness,"RuleCategory= Sheet Metal
+Name = Cutout to Part Edge Distance
+
+Feature1 = Distance
+Feature2 = """" 
+Object1 = Cutout
+Object2 = PartEdge
+
+ExpName = Distance.MinValue/SheetMetal.Thickness
+Operator = >=
+Recom = 2.0
+",
+Sheet Metal, Distance between emboss and bend should be at least 5.0 times sheet thickness,"RuleCategory= Sheet Metal
+Name = Emboss to Bend Distance
+
+Feature1 = Distance
+Feature2 = """" 
+Object1 = Emboss
+Object2 = Bend
+
+ExpName = Distance.MinValue/SheetMetal.Thickness
+Operator = >=
+Recom = 5.0
+",
+Sheet Metal, Distance between emboss and part edge should be at least 4.0 times sheet thickness,"RuleCategory= Sheet Metal
+Name = Emboss to Part Edge Distance
+
+Feature1 = Distance
+Feature2 = """" 
+Object1 = Emboss
+Object2 = PartEdge
+
+ExpName = Distance.MinValue/SheetMetal.Thickness
+Operator = >=
+Recom = 4.0
+",
+Sheet Metal, Distance between extruded form and cutouts should be at least 2.0 times sheet thickness,"RuleCategory= Sheet Metal
+Name = Extruded Form to Cutout Distance
+
+Feature1 = Distance
+Feature2 = """" 
+Object1 = ExtrudedForm
+Object2 = Cutout
+
+ExpName = Distance.MinValue/SheetMetal.Thickness
+Operator = >=
+Recom = 2.0
+",
+Sheet Metal, Distance between extruded form and part edge should be at least 4.0 times sheet thickness,"RuleCategory= Sheet Metal
+Name = Extruded Form Distance to Part Edge 
+
+Feature1 = Distance
+Feature2 = """" 
+Object1 = ExtrudedForm
+Object2 = PartEdge
+
+ExpName = Distance.MinValue/SheetMetal.Thickness
+Operator = >=
+Recom = 4.0
+",
+Sheet Metal, Minimum bridge width should be at least 3.0 times sheet thickness,"RuleCategory= Sheet Metal
+Name = Minimum Bridge Width
+
+Feature1 = Bridge
+Feature2 = """" 
+Object1 = """"
+Object2 = """"
+
+ExpName = Bridge.Width/SheetMetal.Thickness
+Operator = >=
+Recom = 3.0
+",
+Sheet Metal,"For part with material 6061-T6 the flange radius should be atleast 1.0 mm and the length should be 6.0 mm. 
+The sheet thickness for the part with material 6061-T6 should be atleast 2.0 mm.","RuleCategory= Sheet Metal
+Name = Recommended Flange Parameters
+
+Feature1 = Flange
+Feature2 = """" 
+Object1 = """"
+Object2 = """"
+
+Constraint : ExpName = PartBody.Material , Operator = == , Value = 6061-T6
+{
+
+ExpName = SheetMetal.Thickness
+Operator = >=
+Recom = 2.0
+
+ExpName = Flange.Radius
+Operator = >=
+Recom = 1.0
+
+ExpName = Flange.Length
+Operator = >=
+Recom = 6.0
+}
+",
+Sheet Metal,"For a spoon feature the minimum width should be atleast 0.8 times sheet thickness, minimum length should be atleast 10.0 times sheet thickness, minimum height should be  between 0.5 and 1.2 times sheet thickness","RuleCategory= Sheet Metal
+Name = Recommended Spoon Parameters
+
+Feature1 = Spoon
+Feature2 = """" 
+Object1 = """"
+Object2 = """"
+
+ExpName = Spoon.FlangeWidth/SheetMetal.Thickness
+Operator = >=
+Recom = 0.8
+
+ExpName = Spoon.Length/SheetMetal.Thickness
+Operator = >=
+Recom = 10.0
+
+ExpName = Spoon.Height/SheetMetal.Thickness
+Operator = between
+Recom = 0.5:1.2
+",
+Additive Manufacutring," Ensure the part does not exceed maximum print size: length 300.0, width 300.0, height 600.0","RuleCategory= Additive Manufacturing
+Name = Maximum Print Size 
+
+Feature1 = """"
+Feature2 = """" 
+Object1 = """"
+Object2 = """"
+
+ExpName = Additive.PrintSize.Length
+Operator = <=
+Recom = 300.0
+
+ExpName = Additive.PrintSize.Width
+Operator = <=
+Recom = 300.0
+
+ExpName = Additive.PrintSize.Height
+Operator = <=
+Recom = 600.0
+",
+Additive Manufacutring, Ensure angular tolerance is at least 0.1 degrees,"RuleCategory= Additive Manufacturing
+Name = Recommended Angular Tolerance 
+
+Feature1 = PMI
+Feature2 = """" 
+Object1 = """"
+Object2 = """"
+
+ExpName = PMI.Angularity
+Operator = >=
+Recom = 0.1
+",
+Additive Manufacutring, Ensure text height is at least 0.6 units and text width is at least 2.0 units,"RuleCategory= Additive Manufacturing
+Name = Recommended Text Parameters 
+
+Feature1 = Text
+Feature2 = """" 
+Object1 = """"
+Object2 = """"
+
+ExpName = Text.Height
+Operator = >=
+Recom = 0.6
+
+ExpName = Text.Width
+Operator = >=
+Recom = 2.0
+",
+Additive Manufacutring, Ensure pin height is between 0 and 10 units and pin diameter is between 3 and 5 units,"RuleCategory= Additive Manufacturing
+Name = Recommended Pin Diameter 
+
+Feature1 = Pin
+Feature2 = """" 
+Object1 = """"
+Object2 = """"
+
+ExpName = Pin.TotalHeight
+Operator = between
+Recom = 0:10
+
+ExpName = Pin.DiameterAtTop
+Operator = between
+Recom = 3:5
+",
+Additive Manufacutring, Ensure wall thickness is at least 0.8 units for both supported and unsupported walls,"RuleCategory= Additive Manufacturing
+Name = Minimum Wall Thickness 
+
+Feature1 = Wall
+Feature2 = """" 
+Object1 = """"
+Object2 = """"
+
+ExpName = Wall.MinThickness
+Operator = >=
+Recom = 0.8
+",
+Assembly, Ensure minimum clearance between components is at least 0.1 units,"RuleCategory= Assembly
+Name = Minimum Clearance Between Components 
+
+Feature1 = Clearance
+Feature2 = """" 
+Object1 = Component
+Object2 = Component
+
+ExpName = Clearance.MinValue
+Operator = >=
+Recom = 0.1
+",
+Assembly, Ensure washer is present for fasteners engaging with specific materials,"RuleCategory= Assembly
+Name = Missing Washer 
+
+Feature1 = Fastener
+Feature2 = """" 
+Object1 = """"
+Object2 = """"
+
+ExpName = Fastener.IsWasherPresent
+Operator = ==
+Recom = True",
+Assembly, Ensure extended thread length to thread pitch ratio for a bolt is at least 2.0,"RuleCategory= Assembly
+Name = Recommended Extended Thread Length 
+
+Feature1 = Bolt
+Feature2 = """" 
+Object1 = """"
+Object2 = """"
+
+ExpName = Bolt.ExtendedThreadLength/Bolt.ThreadPitch
+Operator = >=
+Recom = 2.0",
+Assembly, Ensure shank length is less than or equal to the clearance hole depth,"RuleCategory= Assembly
+Name = Recommended Shank Length 
+
+Feature1 = Bolt
+Feature2 = """" 
+Object1 = """"
+Object2 = """"
+
+ExpName = Bolt.ShankLength
+Operator = <=
+Recom = Bolt.ClearanceHoleDepth",
+DieCasting, Ensure the ratio of the outer radius at the base of the boss to the nominal thickness of the part body is at least 0.25,"RuleCategory= Die Casting
+Name = Minimum Radius at Base of Boss 
+
+Feature1 = Boss
+Feature2 = """" 
+Object1 = """"
+Object2 = """"
+
+ExpName = Boss.OuterRadiusAtBot/PartBody.NominalThickness
+Operator = >=
+Recom = 0.25",
+DieCasting, Ensure the ratio of the radius at the base of the rib to the top thickness of the rib is between 0.25 and 0.5,"RuleCategory= Die Casting
+Name = Minimum Radius at Base of Rib 
+
+Feature1 = Rib
+Feature2 = """" 
+Object1 = """"
+Object2 = """"
+
+ExpName = Rib.RadiusAtBot/Rib.TopThickness
+Operator = between
+Recom = 0.25:0.5",
+DieCasting, Ensure the outer radius at the tip of the boss is at least 1.5 unit,"RuleCategory= Die Casting
+Name = Minimum Radius at Tip of Boss 
+
+Feature1 = Boss
+Feature2 = """" 
+Object1 = """"
+Object2 = """"
+
+ExpName = Boss.OuterRadiusAtTop
+Operator = >=
+Recom = 1.5",
+DieCasting, Ensure mold wall height is at least 2.0 units and the ratio of mold wall thickness to part body nominal thickness is at least 3.0,"RuleCategory= Die Casting
+Name = Mold Wall Parameters
+
+Feature1 = MoldWall
+Feature2 = """" 
+Object1 = """"
+Object2 = """"
+
+ExpName = MoldWall.Height
+Operator = >=
+Recom = 2.0
+
+ExpName = MoldWall.MinValue/PartBody.NominalThickness
+Operator = >=
+Recom = 3.0",
+DieCasting,Ensure the ratio of the outer diameter to the inner diameter of the boss is at most 2.5 and the ratio of the total height to the outer diameter of the boss is at most 1.0,"RuleCategory= Die Casting
+Name = Recommended Boss Parameters 
+
+Feature1 = Boss
+Feature2 = """" 
+Object1 = """"
+Object2 = """"
+
+ExpName = Boss.OuterDiameterAtTop/Boss.InnerDiameterAtTop
+Operator = <=
+Recom = 2.5
+
+ExpName = Boss.TotalHeight/Boss.OuterDiameterAtTop
+Operator = <=
+Recom = 1.0",
+General," Ensure that thread sizes conform to the recommended standard sizes: 1-64 UNC, 1-72 UNF, 2-56 UNC.","RuleCategory= General
+Name = Recommended Standard Thread Sizes 
+
+Feature1 = Thread
+Feature2 = """" 
+Object1 = """"
+Object2 = """"
+
+ExpName = Thread.Size
+Operator = in
+Recom = 1-64 UNC, 1-72 UNF, 2-56 UNC",
+General," Ensure that external threads conform to the recommended thread classes: 1A, 2A.","RuleCategory= General
+Name = Recommended Thread Class - External Threads 
+
+Feature1 = Thread
+Feature2 = """" 
+Object1 = """"
+Object2 = """"
+
+ExpName = Thread.ExternalThreadClass
+Operator = in
+Recom = 1A, 2A",
+General," Ensure that internal threads conform to the recommended thread classes: 1B, 2B.","RuleCategory= General
+Name = Recommended Thread Class - Internal Threads 
+
+Feature1 = Hole
+Feature2 = """" 
+Object1 = """"
+Object2 = """"
+
+ExpName = Hole.InternalThreadClass
+Operator = in
+Recom = 1B, 2B",
+General," Ensure that the thread unit is set to English.
+
+
+
+
+","RuleCategory= General
+Name = Recommended Thread Unit 
+
+Feature1 = Thread
+Feature2 = """" 
+Object1 = """"
+Object2 = """"
+
+ExpName = Thread.Unit
+Operator = ==
+Recom = English",
+General, Ensure that the wall thickness is between the minimum value of 5.0 units and the maximum value of 10.0 units.,"RuleCategory= General
+Name = Thickness Check 
+
+Feature1 = Wall
+Feature2 = """" 
+Object1 = """"
+Object2 = """"
+
+ExpName1 = Wall.MinThickness
+Operator1 = >=
+Recom1 = 5.0
+
+ExpName2 = Wall.MaxThickness
+Operator2 = <=
+Recom2 = 10.0",
+Turn," Ensure that blind holes have a relief value of 3.0 units, and non-blind holes have a relief value of 0.0 units","RuleCategory= Turning
+Name = Blind Hole Relief 
+
+Feature1 = BoredHole
+Feature2 = """" 
+Object1 = """"
+Object2 = """"
+
+Constraint : ExpName= BoredHole.IsBlind, Operator= ==, Value = True
+{
+        ExpName= BoredHole.Relief.Value
+        Operator= ==
+        Recom = 3.0
+}
+
+Constraint : ExpName = BoredHole.IsBlind, Operator = ==, Value = False
+{
+        ExpName = BoredHole.Relief.Value
+        Operator = ==
+        Recom = 0.0
+}
+",
+Turn, Ensure that the ratio of the length to the minimum outer diameter of turned parts does not exceed 8.0.,"RuleCategory= Turning
+Name = Length to Outer Diameter Ratio
+
+Feature1 = FaceFeature
+Feature2 = """" 
+Object1 = """"
+Object2 = """"
+
+ExpName = Turn.Body.Length/Turn.Body.MinOuterDiameter
+Operator = <=
+Recom = 8.0",
+Turn, Ensure that the internal corner radius of turned parts is at least 0.5 units.,"RuleCategory= Turning
+Name = Minimum Internal Corner Radius 
+
+Feature1 = TurnCorner
+Feature2 = """" 
+Object1 = """"
+Object2 = """"
+
+ExpName = TurnCorner.Radius
+Operator = >=
+Recom = 0.5",
+Tubing,"Clearance between tubes should be at least 5.0 units.
+","RuleCategory= Tubing
+Name = Minimum Clearance Between Tubes 
+
+Feature1 = Clearance
+Feature2 = """" 
+Object1 = Tube
+Object2 = Tube
+
+ExpName = Clearance.MinValue
+Operator = >=
+Recom = 5.0",
+Tubing,"Ensure that the Overlap length between pipes should be at least 45.0 units.
+
+
+
+
+
+
+
+","RuleCategory= Tubing
+Name = Minimum Overlap Length Between Pipes 
+
+Feature1 = Overlap
+Feature2 = """" 
+Object1 = Tube
+Object2 = Tube
+
+ExpName = Overlap.Length
+Operator = >=
+Recom = 45.0
+
+
+",
+Tubing,Bend radius should be at least 14.2748 units for tubes with an outer diameter of 6.35 units.,"RuleCategory= Tubing
+Name = Recommended Tube Bend Radius 
+
+Feature1 = Bend
+Feature2 = """" 
+Object1 = """"
+Object2 = """"
+
+ExpName1 = Tube.OuterDiameter
+Operator1 = ==
+Recom1 = 6.35
+
+ExpName2 = Bend.Radius
+Operator2 = >=
+Recom2 = 14.2748",
+Tubing,Bend radius to outer diameter ratio should be at least 3.0.,"RuleCategory= Tubing
+Name = Tube Bend to OD Ratio 
+
+Feature1 = Bend
+Feature2 = """" 
+Object1 = """"
+Object2 = """"
+
+ExpName = Bend.Radius/Tube.OuterDiameter
+Operator = >=
+Recom = 3.0",
+Tubing,"All bends should have a common radius.
+
+
+
+
+","RuleCategory= Tubing
+Name = Use Common Bend Radius 
+
+Feature1 = Bend
+Feature2 = """" 
+Object1 = """"
+Object2 = """"
+
+ExpName = Tube.IsUniformBendRadius
+Operator = ==
+Recom = True",
+SMForm,"Distance between hole and bend should be at least 2.5 times the sheet metal nominal thickness.
+
+
+
+
+
+","RuleCategory= Sheet Metal Forming
+Name = Hole To Bend Distance 
+
+Feature1 = Distance
+Feature2 = """" 
+Object1 = SimpleHole
+Object2 = Bend
+
+ExpName = Distance.MinValue/SheetMetalForm.NominalThickness
+Operator = >=
+Recom = 2.5",
+SMForm,"Distance between hole and part edge should be at least 2.0 times the sheet metal nominal thickness.
+
+
+
+
+
+
+","RuleCategory= Sheet Metal Forming
+Name = Hole To Part Edge Distance 
+
+Feature1 = Distance
+Feature2 = """" 
+Object1 = SimpleHole
+Object2 = PartEdge
+
+ExpName = Distance.MinValue/SheetMetalForm.NominalThickness
+Operator = >=
+Recom = 2.0",
+SMForm,Bend radius should be at least 1.3 times the sheet metal nominal thickness.,"RuleCategory= Sheet Metal Forming
+Name = Minimum Bend Radius 
+
+Feature1 = Bend
+Feature2 = """" 
+Object1 = """"
+Object2 = """"
+
+ExpName = Bend.Radius/SheetMetalForm.NominalThickness
+Operator = >=
+Recom = 1.3",
+SMForm,Sheet thickness should be at least 1.0 unit.,"RuleCategory= Sheet Metal Forming
+Name = Minimum Sheet Thickness 
+
+Feature1 = SMFace
+Feature2 = """" 
+Object1 = """"
+Object2 = """"
+
+ExpName = SMFace.Thickness
+Operator = >=
+Recom = 1.0",
+SMForm,Hole diameter should be at least 1.0 times the sheet metal nominal thickness.,"RuleCategory= Sheet Metal Forming
+Name = Recommended Hole Diameter 
+
+Feature1 = SimpleHole
+Feature2 = """" 
+Object1 = """"
+Object2 = """"
+
+ExpName = SimpleHole.Diameter/SheetMetalForm.NominalThickness
+Operator = >=
+Recom = 1.0
+",
+InjectionMolding,Cored hole radius in boss should be at least 0.254 units.,"RuleCategory= Injection Molding
+Name = Cored Hole Radius in Boss
+
+Feature1 = Boss
+Feature2 = """" 
+Object1 = """"
+Object2 = """"
+
+ExpName = Boss.InnerRadiusAtBot
+Operator = >=
+Recom = 0.254",
+InjectionMolding,Hole depth to diameter ratio should be 2.0 for blind holes and 4.0 for through holes.,"RuleCategory= Injection Molding
+Name = Hole Depth to Diameter Ratio 
+
+Feature1 = Hole
+Feature2 = """" 
+Object1 = """"
+Object2 = """"
+
+Constraint : ExpName = Hole.IsBlind, Operator = ==, Value = True
+{
+        ExpName = Hole.TotalDepth/Hole.DiameterAtTop
+        Operator = <=
+        Recom = 2.0
+}
+Constraint : ExpName = Hole.IsBlind, Operator = ==, Value = False
+{
+        ExpName = Hole.TotalDepth/Hole.DiameterAtTop
+        Operator = <=
+        Recom = 4.0
+}",
+InjectionMolding,"Rib height should be at most 4.0 times the rib thickness.
+","RuleCategory= Injection Molding
+Name = Maximum Rib Height for Rib Thickness 
+
+Feature1 = Rib
+Feature2 = """" 
+Object1 = """"
+Object2 = """"
+
+ExpName = Rib.Height
+Operator = <=
+Recom = 4.0
+",
+InjectionMolding,Draft angle for text should be at least 0.5 degrees.,"RuleCategory= Injection Molding
+Name = Minimum Draft Angle for Text 
+
+Feature1 = Text
+Feature2 = """" 
+Object1 = """"
+Object2 = """"
+
+ExpName= Text.DraftAngle
+Operator = >=
+Recom = 0.5",
+InjectionMolding,Draft angle for bosses should be at least 0.25 degrees for inner surfaces and 0.5 degrees for outer surfaces.,"RuleCategory= Injection Molding
+Name = Minimum Draft for Bosses 
+
+Feature1 = Boss
+Feature2 = """" 
+Object1 = """"
+Object2 = """"
+
+ExpName = Boss.InnerSurfaceDraftAngle
+Operator = >=
+Recom = 0.25
+
+ExpName = Boss.OuterSurfaceDraftAngle
+Operator = >=
+Recom = 0.5",
+InjectionMolding,Draft angle for ribs should be at least 0.5 degrees.,"RuleCategory= Injection Molding
+Name = Minimum Draft for Ribs 
+
+Feature1 = Rib
+Feature2 = """" 
+Object1 = """"
+Object2 = """"
+
+ExpName = Rib.DraftAngle
+Operator = >=
+Recom = 0.5",
+InjectionMolding,"Recommended boss parameters should be as follows: Outer Diameter to Inner Diameter ratio should be at least 2.0, and Height to Outer Diameter ratio should be at least 3.0.","
+RuleCategory= Injection Molding
+Name = Recommended Boss Parameters 
+
+Feature1 = Boss
+Feature2 = """" 
+Object1 = """"
+Object2 = """"
+
+ExpName = Boss.OuterDiameterAtTop/Boss.InnerDiameterAtTop
+Operator = >=
+Recom = 2.0
+
+ExpName = Boss.TotalHeight/Boss.OuterDiameterAtTop
+Operator = >=
+Recom = 3.0",
+InjectionMolding,Recommended bottom radius for lip should be at least 0.5 times the minimum thickness.,"RuleCategory= Injection Molding
+Name = Recommended Bottom Radius for Lip 
+
+Feature1 = Lip
+Feature2 = """" 
+Object1 = """"
+Object2 = """"
+
+ExpName = Lip.RadiusAtBot/Lip.MinThickness
+Operator = >=
+Recom = 0.5",
+InjectionMolding,For pins with height between 0 and 10 units recommended pin diameter should be between 0.5 and 1.5 units.,"RuleCategory= Injection Molding
+Name = Recommended Pin Diameter based on pin height
+
+Feature1 = Pin
+Feature2 = """" 
+Object1 = """"
+Object2 = """"
+
+Constraint : ExpName = Pin.TotalHeight , Operator = between, Value = 0.0 : 10
+{
+       ExpName = Pin.DiameterAtTop
+       Operator = between
+       Recom = 0.5:1.5
+}",
+InjectionMolding,"Rib height to nominal wall thickness ratio should be at least 3.0, rib thickness with fillet to wall thickness ratio should be at least 0.6, and rib thickness to wall thickness ratio should be at least 0.6.","RuleCategory= Injection Molding
+Name = Recommended Rib Parameters 
+
+Feature1 = Rib
+Feature2 = """" 
+Object1 = """"
+Object2 = """"
+
+ExpName = Rib.Height/InjectionMolding.NominalThickness
+Operator = >=
+Recom = 3.0
+
+ExpName = Rib.ThicknessAtBotWithFillet/InjectionMolding.NominalThickness
+Operator = >=
+Recom = 0.6
+
+ExpName = Rib.ThicknessAtBot/InjectionMolding.NominalThickness
+Operator = >=
+Recom = 0.6",
+Mill,The minimum radius for fillets on top edges should be less than or equal to 25.4 units.,"RuleCategory= Milling
+Name = Fillets on Top Edges
+
+Feature1 = TopFillet
+Feature2 = """" 
+Object1 = """"
+Object2 = """"
+
+ExpName = TopFillet.MinRadius
+Operator = <=
+Recom = 25.4",
+Mill,"The hole depth to hole diameter ratio for deep holes should be less than or equal to 8.0.
+","RuleCategory= Drilling
+Name = Deep Holes
+
+Feature1 = Hole
+Feature2 = """" 
+Object1 = """"
+Object2 = """"
+
+ExpName = Hole.TotalDepth/Hole.Diameter
+Operator = <=
+Recom = 8.0",
+Mill,The minimum radius for fillets on top edges should be greater than or equal to 25.4 units.,"
+RuleCategory= Milling
+Name = Fillets on Top Edges
+
+Feature1 = TopFillet
+Feature2 = """" 
+Object1 = """"
+Object2 = """"
+
+ExpName = TopFillet.MinRadius
+Operator = >=
+Recom = 25.4",
+Mill,Avoid flat bottom holes,"RuleCategory= Drilling
+Name = Flat Bottom Holes
+
+Feature1 = Hole
+Feature2 = """" 
+Object1 = """"
+Object2 = """"
+
+ExpName = Hole.IsFlatBottom
+Operator = ==
+Recom = False",
+Mill,"The maximum thread depth of a hole should not exceed 75% of the drill depth.
+","
+RuleCategory= Drilling
+Name = Maximum Thread Depth of Hole 
+
+Feature1 = Hole
+Feature2 = """" 
+Object1 = """"
+Object2 = """"
+
+ExpName = Hole.ThreadDepth/Hole.DrillDepth
+Operator = <=
+Recom = 0.75",
+Mill,The minimum hole diameter should be at least 5.0 units.,"
+RuleCategory= Drilling
+Name = Minimum Hole Diameter
+
+Feature1 = Hole
+Feature2 = """" 
+Object1 = """"
+Object2 = """"
+
+ExpName = Hole.Diameter
+Operator = >=
+Recom = 5.0",
+Mill,Avoid non uniform bottom radius,"RuleCategory= Milling
+Name = Non Uniform Bottom Radius
+
+Feature1 = BotFillet
+Feature2 = """" 
+Object1 = """"
+Object2 = """"
+
+ExpName = BotFillet.IsVariableRadius
+Operator = ==
+Recom = False",
+Mill,Partial holes should have a wrap angle percentage of 75.0 for partial holes.,"RuleCategory= Drilling
+Name = Partial Holes (vrm)
+
+Feature1 = Hole
+Feature2 = """" 
+Object1 = """"
+Object2 = """"
+
+Constraint : ExpName = Hole.IsPartial, Operator = ==, Value = True
+{
+        ExpName = (Hole.WrapAngle/360)*100
+        Operator = <=
+        Recom = 75.0
+}",
+Mill,Avoid bottom chamfers for a pocket,"RuleCategory= Milling
+Name = Pockets With Bottom Chamfers
+
+Feature1 = Pocket
+Feature2 = """" 
+Object1 = """"
+Object2 = """"
+
+ExpName = Pocket.IsBotChamfered
+Operator = ==
+Recom = False
+",
+Mill,"
+Recommended line profile tolerance based on part size should be 0.0508 for parts with diagonal length 0.0 to 25.4, 0.1016 for parts with diagonal length 25.4 to 152.4, and 0.1524 for parts with diagonal length 152.4 to 2540.0
+","
+RuleCategory= Milling
+Name = Recommended Line Profile Tolerance Based on Part Size
+
+Feature1 = PMI
+Feature2 = """" 
+Object1 = """"
+Object2 = """"
+
+Constraint : ExpName = PartBody.TightBoxDiagonalLength, Operator = <=, Value = 25.4
+{
+        ExpName = PMI.ProfileOfLine
+        Operator = <=
+        Recom = 0.0508
+}
+Constraint : ExpName = PartBody.TightBoxDiagonalLength, Operator = >, Value = 25.4
+{
+        ExpName = PartBody.TightBoxDiagonalLength, Operator = <=, Value = 152.4
+        {
+                ExpName = PMI.ProfileOfLine
+                Operator = <=
+                Recom = 0.1016
+        }
+}
+Constraint : ExpName = PartBody.TightBoxDiagonalLength, Operator = >, Value = 152.4
+{
+        ExpName = PartBody.TightBoxDiagonalLength, Operator = <=, Value = 2540.0
+        {
+                ExpName = PMI.ProfileOfLine
+                Operator = <=
+                Recom = 0.1524
+        }
+}",
+Mill,"Recommended position tolerance for holes should be 0.0254 for default, 0.0508 for parts with diagonal length 0.0 to 25.4 and diameter 5.05714 to 7.54126, 0.127 for parts with diagonal length 25.4 to 152.4 and diameter 5.05714 to 7.54126, and 0.254 for parts with diagonal length 152.4 to 2540.0 and diameter 5.05714 to 7.54126","RuleCategory= Drilling
+Name = Recommended Position Tolerance for Hole (vrm)
+
+Feature1 = HoleSegment
+Feature2 = """" 
+Object1 = """"
+Object2 = """"
+
+Constraint : ExpName = PartBody.TightBoxDiagonalLength, Operator = <=, Value = Default
+{
+        ExpName = HoleSegment.PositionTolerance
+        Operator = <=
+        Recom = 0.0254
+}
+Constraint : ExpName = PartBody.TightBoxDiagonalLength, Operator = <=, Value = 25.4
+{
+        ExpName = HoleSegment.Diameter, Operator = <=, Value = 7.54126
+        {
+                ExpName = HoleSegment.Diameter, Operator = >=, Value = 5.05714
+                {
+                        ExpName = HoleSegment.PositionTolerance
+                        Operator = <=
+                        Recom = 0.0508
+                }
+        }
+}
+Constraint : ExpName = PartBody.TightBoxDiagonalLength, Operator = <=, Value = 152.4
+{
+        ExpName = HoleSegment.Diameter, Operator = <=, Value = 7.54126
+        {
+                ExpName = HoleSegment.Diameter, Operator = >=, Value = 5.05714
+                {
+                        ExpName = HoleSegment.PositionTolerance
+                        Operator = <=
+                        Recom = 0.127
+                }
+        }
+}
+Constraint : ExpName = PartBody.TightBoxDiagonalLength, Operator = <=, Value = 2540.0
+{
+        ExpName = HoleSegment.Diameter, Operator = <=, Value = 7.54126
+        {
+                ExpName = HoleSegment.Diameter, Operator = >=, Value = 5.05714
+                {
+                        ExpName = HoleSegment.PositionTolerance
+                        Operator = <=
+                        Recom = 0.254
+                }
+        }
+}",

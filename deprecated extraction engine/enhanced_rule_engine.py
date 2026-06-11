@@ -429,14 +429,14 @@ class EnhancedConfig(BaseSettings):
     """
 
     # LLM Configuration
-    groq_model: str = os.getenv("GROQ_MODEL", "gpt-oss-20b-latest")
+    groq_model: str = os.getenv("GROQ_MODEL", "openai/gpt-oss-120b")
     groq_api_key: str = ""
-    max_tokens: int = 4096
+    max_tokens: int = 3000
     temperature: float = 0.05
 
     # Processing Configuration
-    chunk_size: int = 800  # Token-aware chunking
-    chunk_overlap: int = 400
+    chunk_size: int = 400  # Token-aware chunking (keep low for 8k TPM models)
+    chunk_overlap: int = 100
     max_chunks_per_document: int = 60
     recall_mode: bool = False
     
@@ -446,7 +446,7 @@ class EnhancedConfig(BaseSettings):
     max_rules_per_document: int = 250
 
     # Lightweight rate limiting / retry controls (enhanced engine only)
-    throttle_seconds: float = 0.0
+    throttle_seconds: float = 60.0  # ~60s between calls to stay under 8k TPM
     max_retries: int = 2
     retry_backoff_seconds: float = 2.0
     
@@ -454,7 +454,7 @@ class EnhancedConfig(BaseSettings):
     rag_top_k: int = 5
     rag_score_threshold: float = 0.7
     enable_rag_enhancement: bool = False
-    api_request_delay: float = 2.0
+    api_request_delay: float = 0.0  # handled by throttle_seconds now
     
     # Advanced features
     enable_semantic_chunking: bool = True
@@ -633,7 +633,9 @@ class EnhancedRuleEngine:
         now = time.time()
         delta = now - self._last_call_time
         if delta < interval:
-            time.sleep(interval - delta)
+            wait = interval - delta
+            enhanced_logger.info("Rate-limit throttle", wait_seconds=round(wait, 1))
+            time.sleep(wait)
         self._last_call_time = time.time()
 
     def _canonicalize_rule_text(self, text: str) -> str:
@@ -1182,8 +1184,10 @@ Return ONLY the JSON object with format: {{"rules": [...]}}. No markdown, no exp
             # Extract rules from all chunks - NO POST-PROCESSING
             all_rules: List[Dict[str, Any]] = []
 
-            for chunk_data in chunks:
+            for idx, chunk_data in enumerate(chunks, 1):
                 chunk_text = chunk_data['text']
+
+                enhanced_logger.info("Processing chunk", chunk=idx, total=len(chunks))
 
                 if not self._respect_tpd_limit():
                     enhanced_logger.warning("TPD window active, stopping extraction")
