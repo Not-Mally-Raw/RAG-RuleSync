@@ -13,7 +13,9 @@ import {
   Copy, 
   Sparkles,
   HelpCircle,
-  FileSpreadsheet
+  FileSpreadsheet,
+  Sun,
+  Moon
 } from 'lucide-react';
 
 const API_BASE_URL = 'http://localhost:8000';
@@ -21,6 +23,9 @@ const API_BASE_URL = 'http://localhost:8000';
 function App() {
   const [activeTab, setActiveTab] = useState('upload'); // 'upload' | 'formalize'
   const [serverStatus, setServerStatus] = useState('checking'); // 'checking' | 'online' | 'offline'
+  const [theme, setTheme] = useState(() => {
+    return localStorage.getItem('theme') || 'light';
+  });
   
   // Tab 1: Upload states
   const [file, setFile] = useState(null);
@@ -53,6 +58,12 @@ function App() {
     const interval = setInterval(checkServer, 10000);
     return () => clearInterval(interval);
   }, []);
+
+  // Update theme attribute on mount and theme changes
+  useEffect(() => {
+    document.documentElement.setAttribute('data-theme', theme);
+    localStorage.setItem('theme', theme);
+  }, [theme]);
 
   // Handle file drop
   const handleDragOver = (e) => {
@@ -235,14 +246,24 @@ function App() {
         <div className="brand-section">
           <Cpu className="brand-logo" size={32} />
           <div>
-            <h1 className="brand-title">DFM Rule Extraction</h1>
+            <h1 className="brand-title">RAG-RuleSync</h1>
+            <p className="brand-subtitle">Enterprise DFM Rule Compiler</p>
           </div>
         </div>
-        <div className="server-status">
-          <span className={`status-dot ${serverStatus === 'online' ? 'online' : ''}`}></span>
-          <span>
-            API Status: {serverStatus === 'online' ? 'Online' : serverStatus === 'offline' ? 'Offline' : 'Checking...'}
-          </span>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+          <div className="server-status">
+            <span className={`status-dot ${serverStatus === 'online' ? 'online' : ''}`}></span>
+            <span>
+              API Status: {serverStatus === 'online' ? 'Online' : serverStatus === 'offline' ? 'Offline' : 'Checking...'}
+            </span>
+          </div>
+          <button 
+            className="btn btn-secondary btn-icon-only" 
+            title={`Switch to ${theme === 'light' ? 'dark' : 'light'} theme`}
+            onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')}
+          >
+            {theme === 'light' ? <Moon size={18} /> : <Sun size={18} />}
+          </button>
         </div>
       </header>
 
@@ -507,7 +528,7 @@ function App() {
                           </span>
                         </div>
                         <div className="formalized-card-body">
-                          <p style={{ fontSize: '0.95rem', fontWeight: '500', marginBottom: '0.75rem', color: '#ffffff' }}>
+                          <p style={{ fontSize: '0.95rem', fontWeight: '500', marginBottom: '0.75rem', color: 'var(--text-main)' }}>
                             "{rule.rule_text}"
                           </p>
                           {rule.dfm_rule ? (
@@ -541,7 +562,7 @@ function App() {
               <div className="empty-state">
                 <Sparkles size={48} className="empty-state-icon" />
                 <div>
-                  <h4 style={{ color: '#ffffff', marginBottom: '0.25rem' }}>No Constraints Compiled</h4>
+                  <h4 style={{ color: 'var(--text-main)', marginBottom: '0.25rem' }}>No Constraints Compiled</h4>
                   <p style={{ fontSize: '0.9rem' }}>Fill in rule descriptions on the left and run the compiler to view outputs.</p>
                 </div>
               </div>
