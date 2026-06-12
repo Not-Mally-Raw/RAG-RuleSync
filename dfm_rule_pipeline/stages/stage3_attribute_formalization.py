@@ -19,7 +19,7 @@ def enforce_pascal_case(equation: str) -> str:
         attr = m.group(2)
         
         if obj.lower() == "moduleparams":
-            obj = "ModuleParams"
+            obj = "ModuleParams" 
         else:
             obj = obj[0].upper() + obj[1:]
             

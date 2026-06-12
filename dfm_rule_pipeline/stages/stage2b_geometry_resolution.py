@@ -129,7 +129,7 @@ def resolve_geometry(llm, rule_text: str, intent: dict) -> dict:
         }
 
     rule_type = intent.get("rule_intent", {}).get("type", "").lower()
-    operator = ">=" if rule_type == "min" else "<="
+    operator = "<=" if rule_type == "max" else ">="
 
     geo_function = f"Distance({entity_a}, {entity_b})"
 
@@ -138,7 +138,7 @@ def resolve_geometry(llm, rule_text: str, intent: dict) -> dict:
         geo_function=geo_function,
         entity_a=entity_a,
         entity_b=entity_b,
-        schema_context=features_dict.get("General", "")
+        schema_context=features_dict.get(intent.get("domain", "General"), features_dict.get("General", ""))
     )
 
     raw_rhs = llm.call(prompt)

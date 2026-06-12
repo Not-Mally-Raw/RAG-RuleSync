@@ -14,15 +14,23 @@ python-docx
 pandas
 numpy
 textstat
+spacy
 
 # ML & Analytics (Rule Quality Assessment)
 scikit-learn
+sentence-transformers
+faiss-cpu
 
 # Orchestration & UI
 streamlit
 tqdm
 python-dotenv
 structlog
+
+# API
+fastapi
+uvicorn[standard]
+python-multipart
 
 # Testing
 pytest

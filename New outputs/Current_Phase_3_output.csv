@@ -1,0 +1,82 @@
+﻿,Final Rule Text,Source Window IDs
+0,"The minimum radius of a curl is two times the material thickness, with an opening to a minimum of one material thickness.","5c501d0c_p1_b11_w0, 5c501d0c_p1_b11_w1"
+1,The minimum distance between a curl and the edge of a hole is the radius of the curl plus the material thickness.,"5c501d0c_p1_b11_w0, 5c501d0c_p1_b11_w1"
+2,The minimum distance a curl should be from an internal bend is six times the material thickness plus the radius of the curl.,"5c501d0c_p1_b11_w0, 5c501d0c_p1_b11_w1"
+3,The minimum distance a curl should be from an external bend is nine times the material thickness plus the radius of the curl.,"5c501d0c_p1_b11_w0, 5c501d0c_p1_b11_w1"
+4,"The maximum diameter should be six times the material thickness, and a maximum depth of one-half the inside diameter.",5c501d0c_p1_b13_w0
+5,The minimum distance that a dimple should be from a hole is three times the material thickness plus the radius of the dimple.,5c501d0c_p1_b13_w0
+6,The minimum distance that a dimple should be from the edge is four times the material thickness plus the inside radius of the dimple.,5c501d0c_p1_b13_w0
+7,Bends should be toleranced plus or minus one-half degree at a location adjacent to the bends.,"5c501d0c_p1_b5_w0, 5c501d0c_p1_b5_w1"
+8,"For the ease of manufacturing, multiple bends on the same plane should occur in the same direction.","5c501d0c_p1_b5_w0, 5c501d0c_p1_b5_w1"
+9,Avoid large sheet metal parts with small bent flanges.,"5c501d0c_p1_b5_w0, 5c501d0c_p1_b5_w1"
+10,"In low carbon steel sheet metal, the minimum radius of a bend should be one-half the material thickness or 0.80 mm (0.03 inch), whichever is larger,","5c501d0c_p1_b5_w0, 5c501d0c_p1_b5_w1"
+11,The minimum distance between two counterbores is eight times the material thickness.,5c501d0c_p1_b7_w0
+12,The minimum distance from a counterbore to an edge is four times the material thickness.,5c501d0c_p1_b7_w0
+13,The minimum distance from a counterbore to a bend is four times the material thickness plus the bend radius.,5c501d0c_p1_b7_w0
+14,The maximum depth is 3.5 times the material thickness at an angle of the hardware.,"5c501d0c_p1_b9_w0, 5c501d0c_p1_b9_w1, 5c501d0c_p1_b9_w2"
+15,A minimum of 50% contact between the hardware and the countersink is required.,"5c501d0c_p1_b9_w0, 5c501d0c_p1_b9_w1, 5c501d0c_p1_b9_w2"
+16,The minimum distance between two countersinks is eight times the material thickness.,"5c501d0c_p1_b9_w0, 5c501d0c_p1_b9_w1, 5c501d0c_p1_b9_w2"
+17,The minimum distance from one countersink and an edge is four times the material thickness.,"5c501d0c_p1_b9_w0, 5c501d0c_p1_b9_w1, 5c501d0c_p1_b9_w2"
+18,The minimum distance from a countersink and a bend is four times the material thickness plus the bend radius.,"5c501d0c_p1_b9_w0, 5c501d0c_p1_b9_w1, 5c501d0c_p1_b9_w2"
+19,"The width and depth, recommended at an angle of 45 degrees, is directly proportional to the radius and material thickness.",5c501d0c_p2_b10_w0
+20,The minimum distance that a gusset should be from the edge of a hole in a parallel plane is eight times the material thickness plus the radius of the gusset.,5c501d0c_p2_b10_w0
+21,"The minimum diameter of a teardrop hem is equal to the material thickness, with a return flange height equal to or greater than four times the material thickness, and a minimum opening of 1/4 of the material thickness.","5c501d0c_p2_b12_w0, 5c501d0c_p2_b12_w1, 5c501d0c_p2_b12_w2, 5c501d0c_p2_b12_w3, 5c501d0c_p2_b12_w4"
+22,The minimum diameter of an open hem is equal to the material thickness with a return flange height equal to or greater than four times the material thickness.,"5c501d0c_p2_b12_w0, 5c501d0c_p2_b12_w1, 5c501d0c_p2_b12_w2, 5c501d0c_p2_b12_w3, 5c501d0c_p2_b12_w4"
+23,The minimum return flange height of a closed hem is equal to or greater than four times the material thickness (the diameter is zero).,"5c501d0c_p2_b12_w0, 5c501d0c_p2_b12_w1, 5c501d0c_p2_b12_w2, 5c501d0c_p2_b12_w3, 5c501d0c_p2_b12_w4"
+24,The minimum distance from a hole to a hem is two times the material thickness plus the radius of the hem.,"5c501d0c_p2_b12_w0, 5c501d0c_p2_b12_w1, 5c501d0c_p2_b12_w2, 5c501d0c_p2_b12_w3, 5c501d0c_p2_b12_w4"
+25,The minimum distance a hem should be from an internal bend is five times the material thickness.,"5c501d0c_p2_b12_w0, 5c501d0c_p2_b12_w1, 5c501d0c_p2_b12_w2, 5c501d0c_p2_b12_w3, 5c501d0c_p2_b12_w4"
+26,The minimum distance a hem should be from an external bend is eight times the material thickness.,"5c501d0c_p2_b12_w0, 5c501d0c_p2_b12_w1, 5c501d0c_p2_b12_w2, 5c501d0c_p2_b12_w3, 5c501d0c_p2_b12_w4"
+27,"The minimum diameter of a hole should be equal to the materials thickness or 1.00 mm (0.04 inch), whichever is greater.",5c501d0c_p2_b14_w0
+28,The minimum distance between holes is directly proportional to the size and shape for the hole feature and the material thickness,5c501d0c_p2_b14_w0
+29,The minimum distance the edge of a hole should be from a form is three times the material thickness plus the bend radius.,5c501d0c_p2_b14_w0
+30,The minimum distance that a dimple should be from a bend is two times the material thickness plus the inside radius of the dimple plus the radius of the bend.,5c501d0c_p2_b2_w0
+31,The minimum distance between one dimple and another is four times the material thickness plus the inside radius of each dimple.,5c501d0c_p2_b2_w0
+32,The maximum depth is proportional to the internal radius or material thickness.,5c501d0c_p2_b4_w0
+33,The maximum depth for a flat embossment is equal to the internal radius plus the external radius.,5c501d0c_p2_b4_w0
+34,The maximum depth for a V embossment is equal to three times the material thickness.,5c501d0c_p2_b4_w0
+35,The minimum distance between two extruded holes is six times the material thickness.,5c501d0c_p2_b6_w0
+36,The minimum distance from an extruded hole to an edge is three times the material thickness.,5c501d0c_p2_b6_w0
+37,The minimum distance from an extruded hole to a bend is three times the material thickness plus the bend radius.,5c501d0c_p2_b6_w0
+38,"The minimum height of a bent flange is directly related to the material thickness, bend radius, and length of bend.",5c501d0c_p2_b8_w0
+39,"The minimum width of a bend relief is one material thickness or 1.50 mm (0.06 inch), whichever is greater.",5c501d0c_p2_b8_w0
+40,The minimum distance the edge of a hole should be from a bend is two times the material thickness plus the bend radius.,5c501d0c_p3_b2_w0
+41,The minimum distance between a hole and the edge of the material is directly proportional to the size and shape of the hole and the material thickness.,5c501d0c_p3_b2_w0
+42,"The minimum distance between the leading edge of a hole through a bend should be equal to the thickness of material plus the bend radius or two times the material thickness, whichever is greater.",5c501d0c_p3_b2_w0
+43,"The minimum width is equal to the material thickness or 1.00 mm (0.04 inch), whichever is greater.","5c501d0c_p3_b6_w0, 5c501d0c_p3_b6_w1, 5c501d0c_p3_b6_w2, 5c501d0c_p3_b6_w3, 5c501d0c_p3_b6_w4, 5c501d0c_p3_b6_w5"
+44,The maximum length for a straight/radius end notch is equal to five times the width.,"5c501d0c_p3_b6_w0, 5c501d0c_p3_b6_w1, 5c501d0c_p3_b6_w2, 5c501d0c_p3_b6_w3, 5c501d0c_p3_b6_w4, 5c501d0c_p3_b6_w5"
+45,The maximum length for a V notch is equal to two times the width.,"5c501d0c_p3_b6_w0, 5c501d0c_p3_b6_w1, 5c501d0c_p3_b6_w2, 5c501d0c_p3_b6_w3, 5c501d0c_p3_b6_w4, 5c501d0c_p3_b6_w5"
+46,The minimum distance between a hole and the edge of a notch is directly proportional to the size/shape of the hole and the material thickness.,"5c501d0c_p3_b6_w0, 5c501d0c_p3_b6_w1, 5c501d0c_p3_b6_w2, 5c501d0c_p3_b6_w3, 5c501d0c_p3_b6_w4, 5c501d0c_p3_b6_w5"
+47,The minimum distance from a notch to a bend in a parallel plane is eight times the material thickness plus the radius of the bend.,"5c501d0c_p3_b6_w0, 5c501d0c_p3_b6_w1, 5c501d0c_p3_b6_w2, 5c501d0c_p3_b6_w3, 5c501d0c_p3_b6_w4, 5c501d0c_p3_b6_w5"
+48,The minimum distance from a notch to a bend in a perpendicular plane is three times the material thickness plus the radius of the bend.,"5c501d0c_p3_b6_w0, 5c501d0c_p3_b6_w1, 5c501d0c_p3_b6_w2, 5c501d0c_p3_b6_w3, 5c501d0c_p3_b6_w4, 5c501d0c_p3_b6_w5"
+49,"The minimum distance beyond the bend on the side edge is equal to the thickness of the material plus the bend radius, or two times the material thickness, whichever is greater.","5c501d0c_p3_b6_w0, 5c501d0c_p3_b6_w1, 5c501d0c_p3_b6_w2, 5c501d0c_p3_b6_w3, 5c501d0c_p3_b6_w4, 5c501d0c_p3_b6_w5"
+50,"The minimum distance between two notches is two times the material thickness or 3.200 mm (0.125 inch), whichever is greater.","5c501d0c_p3_b6_w0, 5c501d0c_p3_b6_w1, 5c501d0c_p3_b6_w2, 5c501d0c_p3_b6_w3, 5c501d0c_p3_b6_w4, 5c501d0c_p3_b6_w5"
+51,"The maximum inside radius is equal to three times the material thickness, with a maximum depth of the inside radius.","5c501d0c_p3_b8_w0, 5c501d0c_p3_b8_w1, 5c501d0c_p3_b8_w2, 5c501d0c_p3_b8_w3"
+52,The minimum distance from a center line of a rib to the edge of a hole is three times the material thickness plus the radius of the rib.,"5c501d0c_p3_b8_w0, 5c501d0c_p3_b8_w1, 5c501d0c_p3_b8_w2, 5c501d0c_p3_b8_w3"
+53,The minimum distance a rib should be from an edge in a perpendicular plane is four times the material thickness plus the radius of the rib.,"5c501d0c_p3_b8_w0, 5c501d0c_p3_b8_w1, 5c501d0c_p3_b8_w2, 5c501d0c_p3_b8_w3"
+54,The minimum distance a rib should be from an edge in a parallel plane is eight times the material thickness plus the radius of the rib.,"5c501d0c_p3_b8_w0, 5c501d0c_p3_b8_w1, 5c501d0c_p3_b8_w2, 5c501d0c_p3_b8_w3"
+55,"The minimum distance a rib should be from a bend perpendicular to the rib is two times the material thickness, plus the radius of the rib, plus the radius of the bend.","5c501d0c_p3_b8_w0, 5c501d0c_p3_b8_w1, 5c501d0c_p3_b8_w2, 5c501d0c_p3_b8_w3"
+56,The minimum distance between two parallel ribs is ten times the material thickness plus the radii of the ribs.,"5c501d0c_p3_b8_w0, 5c501d0c_p3_b8_w1, 5c501d0c_p3_b8_w2, 5c501d0c_p3_b8_w3"
+57,Outside sharp corners receive twice as much plating as flat surfaces.,"5c501d0c_p4_b10_w0, 5c501d0c_p4_b10_w1, 5c501d0c_p4_b10_w2, 5c501d0c_p4_b10_w3, 5c501d0c_p4_b10_w4, 5c501d0c_p4_b10_w6, 5c501d0c_p4_b10_w7, 5c501d0c_p4_b10_w8"
+58,"Allow for pitch diameters for screw threads, which can increase four times the plating thickness.","5c501d0c_p4_b10_w0, 5c501d0c_p4_b10_w1, 5c501d0c_p4_b10_w2, 5c501d0c_p4_b10_w3, 5c501d0c_p4_b10_w4, 5c501d0c_p4_b10_w6, 5c501d0c_p4_b10_w7, 5c501d0c_p4_b10_w8"
+59,Tapped holes may need to be re-tapped after plating to ensure accuracy.,"5c501d0c_p4_b10_w0, 5c501d0c_p4_b10_w1, 5c501d0c_p4_b10_w2, 5c501d0c_p4_b10_w3, 5c501d0c_p4_b10_w4, 5c501d0c_p4_b10_w6, 5c501d0c_p4_b10_w7, 5c501d0c_p4_b10_w8"
+60,Projections accumulate more plating than other areas.,"5c501d0c_p4_b10_w0, 5c501d0c_p4_b10_w1, 5c501d0c_p4_b10_w2, 5c501d0c_p4_b10_w3, 5c501d0c_p4_b10_w4, 5c501d0c_p4_b10_w6, 5c501d0c_p4_b10_w7, 5c501d0c_p4_b10_w8"
+61,"Recessed areas may be difficult to plate, resulting in little or no coverage.","5c501d0c_p4_b10_w0, 5c501d0c_p4_b10_w1, 5c501d0c_p4_b10_w2, 5c501d0c_p4_b10_w3, 5c501d0c_p4_b10_w4, 5c501d0c_p4_b10_w6, 5c501d0c_p4_b10_w7, 5c501d0c_p4_b10_w8"
+62,Lap-welded joints trap plating solutions.,"5c501d0c_p4_b10_w0, 5c501d0c_p4_b10_w1, 5c501d0c_p4_b10_w2, 5c501d0c_p4_b10_w3, 5c501d0c_p4_b10_w4, 5c501d0c_p4_b10_w6, 5c501d0c_p4_b10_w7, 5c501d0c_p4_b10_w8"
+63,One solution is to raise welds on embossed areas by 0.015 in. (0.3 mm) to allow for flushing and blow drying between the surfaces.,"5c501d0c_p4_b10_w0, 5c501d0c_p4_b10_w1, 5c501d0c_p4_b10_w2, 5c501d0c_p4_b10_w3, 5c501d0c_p4_b10_w4, 5c501d0c_p4_b10_w6, 5c501d0c_p4_b10_w7, 5c501d0c_p4_b10_w8"
+64,Masking of stampings and fabrications to anodize certain areas is not recommended.,"5c501d0c_p4_b10_w0, 5c501d0c_p4_b10_w1, 5c501d0c_p4_b10_w2, 5c501d0c_p4_b10_w3, 5c501d0c_p4_b10_w4, 5c501d0c_p4_b10_w6, 5c501d0c_p4_b10_w7, 5c501d0c_p4_b10_w8"
+65,Design drain holes/vent holes for plating solutions and rinsing.,"5c501d0c_p4_b10_w0, 5c501d0c_p4_b10_w1, 5c501d0c_p4_b10_w2, 5c501d0c_p4_b10_w3, 5c501d0c_p4_b10_w4, 5c501d0c_p4_b10_w6, 5c501d0c_p4_b10_w7, 5c501d0c_p4_b10_w8"
+66,Design tabs/holes for attachment to part racks.,"5c501d0c_p4_b10_w0, 5c501d0c_p4_b10_w1, 5c501d0c_p4_b10_w2, 5c501d0c_p4_b10_w3, 5c501d0c_p4_b10_w4, 5c501d0c_p4_b10_w6, 5c501d0c_p4_b10_w7, 5c501d0c_p4_b10_w8"
+67,The minimum distance from a semi-pierced hole and a form is three times the material thickness plus the form radius.,5c501d0c_p4_b2_w0
+68,The minimum distance from a semi-pierced hole and a bend is two times the material thickness plus the bend radius.,5c501d0c_p4_b2_w0
+69,The minimum distance between semi-pierced holes is eight times the material thickness.,5c501d0c_p4_b2_w0
+70,"The minimum width of a slot is equal to the material thickness or 1.00 mm (0.04 inch), whichever is greater.",5c501d0c_p4_b4_w0
+71,"The minimum distance from the inside surface of a bend to the edge of a slot is directly proportional to the length of the slot, material thickness, and radius of the bend.",5c501d0c_p4_b4_w0
+72,When using slots and tabs the maximum width of the slot must be greater than the thickness of the tab and the tab length should equal the material thickness.,5c501d0c_p4_b4_w0
+73,"The minimum width is equal to two times the material thickness or 3.200 mm, whichever is greater, while the maximum length is five times the width.",5c501d0c_p4_b6_w0
+74,"The minimum distance between tabs is equal to the material thickness or 1.00 mm (0.04 inch), whichever is greater.",5c501d0c_p4_b6_w0
+75,Spot welding should be restricted to joining coplanar surfaces.,"5c501d0c_p4_b8_w0, 5c501d0c_p4_b8_w1, 5c501d0c_p4_b8_w2, 5c501d0c_p4_b8_w3"
+76,The minimum distance between welds is 10 times the material thickness.,"5c501d0c_p4_b8_w0, 5c501d0c_p4_b8_w1, 5c501d0c_p4_b8_w2, 5c501d0c_p4_b8_w3"
+77,Using 20 times the material thickness as the distance between welds is ideal.,"5c501d0c_p4_b8_w0, 5c501d0c_p4_b8_w1, 5c501d0c_p4_b8_w2, 5c501d0c_p4_b8_w3"
+78,The minimum distance between a weld and the edge is two times the diameter of the spot weld.,"5c501d0c_p4_b8_w0, 5c501d0c_p4_b8_w1, 5c501d0c_p4_b8_w2, 5c501d0c_p4_b8_w3"
+79,The minimum distance from a weld to a form is the spot diameter plus the bend radius.,"5c501d0c_p4_b8_w0, 5c501d0c_p4_b8_w1, 5c501d0c_p4_b8_w2, 5c501d0c_p4_b8_w3"
+80,Use PEMs instead of threaded inserts.,"5c501d0c_p4_b8_w0, 5c501d0c_p4_b8_w1, 5c501d0c_p4_b8_w2, 5c501d0c_p4_b8_w3"

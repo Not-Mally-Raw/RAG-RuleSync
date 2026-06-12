@@ -57,3 +57,5 @@ temp/
 
 # Streamlit cache
 .streamlit/
+
+*.db

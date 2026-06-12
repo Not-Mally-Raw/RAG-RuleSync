@@ -9,7 +9,7 @@ assembly = """
     Attributes: IsInterfering, Volume
 
     Object: Clearance
-    Attribute: MinValue, IsTouching, IsInterfering
+    Attributes: MinValue, IsTouching, IsInterfering
 
     Object: Fastener
     Attributes: Type, Name, IsWasherPresent, IsFirstEngagedCompInContact, WrenchFlatDiameter, BearingArea, MinSupportWidth, ContactWidth, FirstEngagedComp, ScrewDiameter, FirstEngagedHole
