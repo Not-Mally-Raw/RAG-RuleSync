@@ -9,7 +9,11 @@ class LLMClient:
     def __init__(self):
         self.clients = []
         for key in GROQ_API_KEY_LIST:
-            self.clients.append(OpenAI(base_url="https://api.groq.com/openai/v1", api_key=key))
+            self.clients.append(OpenAI(
+                base_url="https://api.groq.com/openai/v1", 
+                api_key=key,
+                timeout=60.0
+            ))
             
         if not self.clients:
             print("⚠️ Warning: No GROQ_API_KEYS found in .env or environment.")
