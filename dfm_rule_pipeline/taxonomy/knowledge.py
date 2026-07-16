@@ -272,6 +272,9 @@ OBJECT_ALIASES_BY_DOMAIN: Dict[str, Dict[str, str]] = {
 DOMAIN_SCHEMA_EXTENSIONS: Dict[str, Dict[str, List[str]]] = {
     "SheetMetal": {
         "Slot": ["Length", "Width"],
+    },
+    "General": {
+        "Wall": ["MinThickness", "MaxThickness", "Thickness"],
     }
 }
 
@@ -279,6 +282,13 @@ DOMAIN_SCHEMA_EXTENSIONS: Dict[str, Dict[str, List[str]]] = {
 OBJECT_TEXT_ALIASES: Dict[str, List[str]] = {
     "Bend": ["bend", "bends"],
     "Bridge": ["bridge", "bridges"],
+    "Hem": ["hem", "hems"],
+    "OpenHem": ["open hem", "open hems"],
+    "ClosedHem": ["closed hem", "closed hems"],
+    "RolledHem": ["rolled hem", "rolled hems"],
+    "TearDropHem": ["teardrop hem", "teardrop hems", "tear drop hem", "tear drop hems"],
+    "Flange": ["flange", "flanges", "return flange", "return flanges"],
+    "EdgeFlange": ["edge flange", "edge flanges", "return flange", "return flanges"],
     "Cutout": ["cutout", "cutouts", "slot", "slots", "opening", "openings"],
     "SimpleCutout": ["simple cutout", "slot", "slots", "opening", "openings"],
     "Slot": ["slot", "slots", "slot edge", "edge of a slot", "opening", "openings"],
@@ -289,6 +299,19 @@ OBJECT_TEXT_ALIASES: Dict[str, List[str]] = {
     "Component": ["component", "components"],
     "Fastener": ["fastener", "fasteners"],
     "Tube": ["tube", "tubes", "pipe", "pipes"],
+}
+
+
+NON_PHYSICAL_OBJECTS = {
+    "ModuleParams",
+    "SheetMetal",
+    "Sheetmetal",
+    "SheetMetalForm",
+    "SheetmetalForming",
+    "InjectionMolding",
+    "AdditiveManufacturing",
+    "PartBody",
+    "PartFace",
 }
 
 

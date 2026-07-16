@@ -103,6 +103,83 @@ def test_normalize_rule_payload_always_sets_result_to_validation():
     assert rule["Results"] == "Validation"
 
 
+def test_normalize_rule_payload_wraps_flat_validation_operators():
+    rule = normalize_rule_payload(
+        {
+            "Name": "Teardrop hem parameters",
+            "RuleCategory": "SheetMetal",
+            "RuleType": "Feature",
+            "Feature1": "TearDropHem",
+            "Constraints": {
+                "ValidationParamList": [
+                    {
+                        "ExpName": "TearDropHem.Radius",
+                        "Operator": ["="],
+                        "Value": [[["SheetMetal.Thickness"]]],
+                        "AllowedParams": ["SheetMetal.Thickness"],
+                    },
+                    {
+                        "ExpName": "Flange.Length",
+                        "Operator": [">="],
+                        "Value": [[["4*SheetMetal.Thickness"]]],
+                        "AllowedParams": ["SheetMetal.Thickness"],
+                    },
+                    {
+                        "ExpName": "TearDropHem.HemOpening",
+                        "Operator": [">="],
+                        "Value": [[["0.25*SheetMetal.Thickness"]]],
+                        "AllowedParams": ["SheetMetal.Thickness"],
+                    },
+                ]
+            },
+        },
+        domain="SheetMetal",
+        bucket="MultiExpressionValidation",
+    )
+
+    validations = rule["Constraints"]["ValidationParamList"]
+    assert validations[0]["Operator"] == [["="]]
+    assert validations[1]["Operator"] == [[">="]]
+    assert validations[2]["Operator"] == [[">="]]
+
+
+def test_normalize_rule_payload_wraps_flat_condition_operators_and_branches():
+    rule = normalize_rule_payload(
+        {
+            "Name": "Blind hole ratio",
+            "RuleCategory": "Injection Molding",
+            "RuleType": "Feature",
+            "Feature1": "Hole",
+            "Constraints": {
+                "ConditionParamList": [
+                    {
+                        "ExpName": "Hole.IsBlind",
+                        "Operator": "=",
+                        "Value": [["Yes"], ["No"]],
+                    }
+                ],
+                "ValidationParamList": [
+                    {
+                        "ExpName": "Hole.TotalDepth/Hole.DiameterAtTop",
+                        "Operator": "=",
+                        "Value": [["2.0"], ["4.0"]],
+                        "AllowedParams": [""],
+                    }
+                ],
+            },
+        },
+        domain="Injection Molding",
+        bucket="ConditionalValidation",
+    )
+
+    condition = rule["Constraints"]["ConditionParamList"][0]
+    validation = rule["Constraints"]["ValidationParamList"][0]
+    assert condition["Operator"] == [["="]]
+    assert condition["Value"] == [[["Yes"]], [["No"]]]
+    assert validation["Operator"] == [["="]]
+    assert validation["Value"] == [[["2.0"]], [["4.0"]]]
+
+
 def test_envelope_normalization_accepts_single_rule_payload():
     envelope = normalize_envelope_payload(
         {

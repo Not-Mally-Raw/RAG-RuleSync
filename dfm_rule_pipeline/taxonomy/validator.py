@@ -269,6 +269,37 @@ def _value_branch_count(value: List[List[List[str]]]) -> int:
 
 def _validate_range_and_any(param: Any, location: str) -> List[TaxonomyValidationError]:
     errors: List[TaxonomyValidationError] = []
+    branch_specific_operators = (
+        len(param.Operator) > 1
+        and len(param.Operator) == len(param.Value)
+        and all(isinstance(branch, list) and len(branch) == 1 for branch in param.Value)
+    )
+    if branch_specific_operators:
+        for branch_idx, ops in enumerate(param.Operator):
+            active_ops = [op for op in ops if op]
+            if len(active_ops) == 2 and all(op in RANGE_OPERATORS for op in active_ops):
+                if len(param.Value[branch_idx][0]) != 2:
+                    errors.append(
+                        _err(
+                            "range_shape_invalid",
+                            "Range validation must provide exactly two values for the branch-specific range operator group.",
+                            f"{location}.Value[{branch_idx}][0]",
+                            'Use Value branch [["lower", "upper"]] for branch-specific range operators.',
+                        )
+                    )
+            elif active_ops == ["ANY"]:
+                branch = param.Value[branch_idx]
+                if not branch or any(not isinstance(item, list) or len(item) != 1 for item in branch):
+                    errors.append(
+                        _err(
+                            "any_shape_invalid",
+                            "ANY validation must encode each allowed value as a separate single-value list.",
+                            f"{location}.Value[{branch_idx}]",
+                            'Use Value [[["A"], ["B"]]], not [[["A", "B"]]].',
+                        )
+                    )
+        return errors
+
     for group_idx, ops in enumerate(param.Operator):
         active_ops = [op for op in ops if op]
         if len(active_ops) == 2 and all(op in RANGE_OPERATORS for op in active_ops):

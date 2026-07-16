@@ -1,7 +1,7 @@
 import re
 from typing import Any, Dict, Iterable, List, Set
 
-from .knowledge import OBJECT_TEXT_ALIASES
+from .knowledge import NON_PHYSICAL_OBJECTS, OBJECT_TEXT_ALIASES
 from .models import TaxonomyValidationError
 
 
@@ -22,6 +22,7 @@ ALWAYS_ALLOWED_ROOTS = {
     "Turn",
     "Turning",
 }
+MEASUREMENT_FEATURES = {"Distance", "Clearance", "Interference"}
 
 
 def _err(code: str, message: str, location: str, suggestion: str = "") -> TaxonomyValidationError:
@@ -43,8 +44,16 @@ def _term_in_text(text: str, term: str) -> bool:
 def _aliases_for_object(obj: str) -> Set[str]:
     aliases = set(OBJECT_TEXT_ALIASES.get(obj, []))
     aliases.add(obj)
-    aliases.add(_split_camel(obj))
+    split = _split_camel(obj)
+    aliases.add(split)
+    aliases.add(split.replace(" ", ""))
     aliases.add(obj.replace("_", " "))
+    for alias in list(aliases):
+        if alias.endswith("y"):
+            aliases.add(f"{alias[:-1]}ies")
+        elif alias and not alias.endswith("s"):
+            aliases.add(f"{alias}s")
+        aliases.add(alias.replace("tear drop", "teardrop"))
     return {alias.lower() for alias in aliases if alias}
 
 
@@ -74,6 +83,15 @@ def _schema_refs(rule: Dict[str, Any]) -> Iterable[str]:
                     yield from REF_RE.findall(text)
 
 
+def _structural_roots(rule: Dict[str, Any]) -> Set[str]:
+    roots = set()
+    for key in ("Feature1", "Feature2", "Object1", "Object2"):
+        value = str(rule.get(key, "") or "")
+        if value and value not in MEASUREMENT_FEATURES and value not in NON_PHYSICAL_OBJECTS:
+            roots.add(value)
+    return roots
+
+
 def validate_grounding(rule_text: str, payload: Dict[str, Any]) -> List[TaxonomyValidationError]:
     errors: List[TaxonomyValidationError] = []
     if not rule_text or not isinstance(payload, dict):
@@ -87,6 +105,7 @@ def validate_grounding(rule_text: str, payload: Dict[str, Any]) -> List[Taxonomy
         if not isinstance(rule, dict):
             continue
         base = f"$.taxonomy_rules[{rule_idx}]"
+        structural_roots = _structural_roots(rule)
 
         for object_key in ("Object1", "Object2"):
             obj = str(rule.get(object_key, "") or "")
@@ -103,6 +122,8 @@ def validate_grounding(rule_text: str, payload: Dict[str, Any]) -> List[Taxonomy
         for ref in _schema_refs(rule):
             root = ref.split(".", 1)[0]
             if root in ALWAYS_ALLOWED_ROOTS:
+                continue
+            if root in structural_roots:
                 continue
             if not _object_is_grounded(rule_text, root):
                 errors.append(

@@ -86,14 +86,106 @@ def _stringify_list(value: Any) -> Any:
     return _to_schema_string(value)
 
 
+def _normalize_filter_operator_shape(value: Any) -> List[str]:
+    operators = _ensure_list(value, [""])
+    if not isinstance(operators, list):
+        return [_to_schema_string(operators)]
+
+    flat: List[Any] = []
+    for item in operators:
+        if isinstance(item, list):
+            flat.extend(item)
+        else:
+            flat.append(item)
+    return _stringify_list(flat or [""])
+
+
+def _normalize_nested_operator_shape(value: Any) -> List[List[str]]:
+    if isinstance(value, str):
+        return [[_to_schema_string(value)]]
+
+    operators = _ensure_list(value, [[""]])
+    if not isinstance(operators, list):
+        return [[_to_schema_string(operators)]]
+
+    if all(not isinstance(item, list) for item in operators):
+        return [_stringify_list(operators)]
+
+    normalized: List[List[str]] = []
+    for item in operators:
+        if isinstance(item, list):
+            normalized.append(_stringify_list(item or [""]))
+        else:
+            normalized.append([_to_schema_string(item)])
+    return normalized or [[""]]
+
+
+def _normalize_filter_value_shape(value: Any) -> List[str]:
+    values = _ensure_list(value, [""])
+    if not isinstance(values, list):
+        return [_to_schema_string(values)]
+    flat: List[Any] = []
+    for item in values:
+        if isinstance(item, list):
+            flat.extend(item)
+        else:
+            flat.append(item)
+    return _stringify_list(flat or [""])
+
+
+def _normalize_nested_value_shape(value: Any, prefer_branches: bool = False) -> List[List[List[str]]]:
+    if not isinstance(value, list):
+        return [[[_to_schema_string(value)]]]
+    if not value:
+        return [[[""]]]
+
+    if all(not isinstance(item, list) for item in value):
+        return [[_stringify_list(value)]]
+
+    if all(isinstance(item, list) and all(not isinstance(sub, list) for sub in item) for item in value):
+        if prefer_branches:
+            return [[_stringify_list(item)] for item in value]
+        return [[_stringify_list(item) for item in value]]
+
+    normalized: List[List[List[str]]] = []
+    for branch in value:
+        if not isinstance(branch, list):
+            normalized.append([[_to_schema_string(branch)]])
+            continue
+        normalized_branch: List[List[str]] = []
+        for group in branch:
+            if isinstance(group, list):
+                normalized_branch.append(_stringify_list(group or [""]))
+            else:
+                normalized_branch.append([_to_schema_string(group)])
+        normalized.append(normalized_branch or [[""]])
+    return normalized or [[[""]]]
+
+
+def _validation_value_prefers_branches(operator: List[List[str]], value: Any) -> bool:
+    active_ops = [op for group in operator for op in group if op]
+    if active_ops == ["ANY"]:
+        return False
+    return (
+        isinstance(value, list)
+        and len(value) > 1
+        and all(
+            isinstance(item, list)
+            and len(item) == 1
+            and not isinstance(item[0], list)
+            for item in value
+        )
+    )
+
+
 def _normalize_filter_param(value: Any) -> Dict[str, Any]:
     base = deepcopy(value) if isinstance(value, dict) else {}
     defaults = placeholder_filter()
     for key, default in defaults.items():
         base[key] = base.get(key, default)
     base["ExpName"] = _to_schema_string(base.get("ExpName"))
-    base["Operator"] = _stringify_list(_ensure_list(base.get("Operator"), [""]))
-    base["Value"] = _stringify_list(_ensure_list(base.get("Value"), [""]))
+    base["Operator"] = _normalize_filter_operator_shape(base.get("Operator"))
+    base["Value"] = _normalize_filter_value_shape(base.get("Value"))
     return base
 
 
@@ -103,8 +195,8 @@ def _normalize_condition_param(value: Any) -> Dict[str, Any]:
     for key, default in defaults.items():
         base[key] = base.get(key, default)
     base["ExpName"] = _to_schema_string(base.get("ExpName"))
-    base["Operator"] = _stringify_list(_ensure_list(base.get("Operator"), [[""]]))
-    base["Value"] = _stringify_list(_ensure_list(base.get("Value"), [[[""]]]))
+    base["Operator"] = _normalize_nested_operator_shape(base.get("Operator"))
+    base["Value"] = _normalize_nested_value_shape(base.get("Value"), prefer_branches=True)
     return base
 
 
@@ -114,8 +206,11 @@ def _normalize_validation_param(value: Any) -> Dict[str, Any]:
     for key, default in defaults.items():
         base[key] = base.get(key, default)
     base["ExpName"] = _to_schema_string(base.get("ExpName"))
-    base["Operator"] = _stringify_list(_ensure_list(base.get("Operator"), [[""]]))
-    base["Value"] = _stringify_list(_ensure_list(base.get("Value"), [[[""]]]))
+    base["Operator"] = _normalize_nested_operator_shape(base.get("Operator"))
+    base["Value"] = _normalize_nested_value_shape(
+        base.get("Value"),
+        prefer_branches=_validation_value_prefers_branches(base["Operator"], base.get("Value")),
+    )
     base["AllowedParams"] = _stringify_list(_ensure_list(base.get("AllowedParams"), [""]))
     return base
 

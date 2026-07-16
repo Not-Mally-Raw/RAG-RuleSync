@@ -350,3 +350,130 @@ def test_grounding_rejects_copied_distance_object_not_in_rule_text():
     errors = validate_grounding(rule_text, payload)
     assert "object_grounding_failed" in {error.code for error in errors}
     assert any("Bridge" in error.message for error in errors)
+
+
+def test_grounding_accepts_camelcase_teardrop_hem_alias():
+    rule_text = (
+        "The minimum diameter of a teardrop hem is equal to the material thickness, "
+        "with a return flange height equal to or greater than four times the material thickness."
+    )
+    payload = normalize_envelope_payload(
+        {
+            "domain": "SheetMetal",
+            "bucket": "MultiExpressionValidation",
+            "taxonomy_rules": [
+                {
+                    "Name": "Teardrop hem parameters",
+                    "RuleCategory": "SheetMetal",
+                    "Results": "Validation",
+                    "RuleType": "Feature",
+                    "Feature1": "TearDropHem",
+                    "Object1": "TearDropHem",
+                    "Object2": "Flange",
+                    "Constraints": {
+                        "ValidationParamList": [
+                            {
+                                "ExpName": "TearDropHem.Radius",
+                                "Operator": [["="]],
+                                "Value": [[["0.5*SheetMetal.Thickness"]]],
+                                "AllowedParams": ["SheetMetal.Thickness"],
+                            }
+                        ]
+                    },
+                }
+            ],
+        },
+        fallback_domain="SheetMetal",
+        fallback_bucket="MultiExpressionValidation",
+    )
+
+    assert validate_grounding(rule_text, payload) == []
+
+
+def test_grounding_allows_formula_root_from_structural_feature():
+    payload = normalize_envelope_payload(
+        {
+            "domain": "SheetMetal",
+            "bucket": "MultiExpressionValidation",
+            "taxonomy_rules": [
+                {
+                    "Name": "Hem opening",
+                    "RuleCategory": "SheetMetal",
+                    "Results": "Validation",
+                    "RuleType": "Feature",
+                    "Feature1": "TearDropHem",
+                    "Object1": "",
+                    "Object2": "",
+                    "Constraints": {
+                        "ValidationParamList": [
+                            {
+                                "ExpName": "TearDropHem.HemOpening",
+                                "Operator": [[">="]],
+                                "Value": [[["0.25*SheetMetal.Thickness"]]],
+                                "AllowedParams": ["SheetMetal.Thickness"],
+                            }
+                        ]
+                    },
+                }
+            ],
+        },
+        fallback_domain="SheetMetal",
+        fallback_bucket="MultiExpressionValidation",
+    )
+
+    assert validate_grounding("The hem opening should be at least one quarter of material thickness.", payload) == []
+
+
+def test_validator_accepts_branch_specific_condition_operator_table():
+    payload = normalize_envelope_payload(
+        {
+            "domain": "Drilling",
+            "bucket": "NestedConditionalValidation",
+            "taxonomy_rules": [
+                {
+                    "Name": "Recommended Position Tolerance for Hole",
+                    "RuleCategory": "Drilling",
+                    "Results": "Validation",
+                    "RuleType": "Feature",
+                    "Feature1": "HoleSegment",
+                    "Feature2": "",
+                    "Object1": "",
+                    "Object2": "",
+                    "Constraints": {
+                        "FilterParamList": [{"ExpName": "", "Operator": [""], "Value": [""]}],
+                        "ConditionParamList": [
+                            {
+                                "ExpName": "PartBody.TightBoxDiagonalLength",
+                                "Operator": [["="], [">", "<="]],
+                                "Value": [[["Default"]], [["0.0", "25.4"]]],
+                            },
+                            {
+                                "ExpName": "HoleSegment.Diameter",
+                                "Operator": [[""], [">", "<="]],
+                                "Value": [[[""]], [["5.05714", "7.54126"]]],
+                            },
+                        ],
+                        "ValidationParamList": [
+                            {
+                                "ExpName": "HoleSegment.PositionTolerance",
+                                "Operator": [["<="]],
+                                "Value": [[["0.0254"]], [["0.0508"]]],
+                                "AllowedParams": [""],
+                            }
+                        ],
+                        "AdditionalParamList": [{"ExpName": ""}],
+                        "UserParamList": [
+                            {"ParamName": "", "DisplayName": "", "Value": [""], "MinValue": "", "MaxValue": ""}
+                        ],
+                    },
+                }
+            ],
+        },
+        fallback_domain="Drilling",
+        fallback_bucket="NestedConditionalValidation",
+    )
+
+    envelope, errors = TaxonomyValidator().validate(payload)
+
+    assert envelope is not None
+    assert errors == []

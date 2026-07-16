@@ -5,6 +5,7 @@ from typing import Any, Dict, List
 from .knowledge import (
     GLOBAL_PATH_ALIASES,
     MODULE_EXPRESSION_PREFIXES,
+    NON_PHYSICAL_OBJECTS,
     OBJECT_ALIASES_BY_DOMAIN,
     PATH_ALIASES_BY_DOMAIN,
     THICKNESS_VARIABLE_BY_DOMAIN,
@@ -62,6 +63,31 @@ def _normalize_objects(rule: Dict[str, Any], domain: str) -> None:
         value = rule.get(key, "")
         if value in aliases:
             rule[key] = aliases[value]
+
+
+def _normalize_feature_object_shape(rule: Dict[str, Any]) -> None:
+    feature1 = str(rule.get("Feature1", "") or "")
+    if feature1 == "Distance":
+        return
+
+    for key in ("Object1", "Object2"):
+        value = str(rule.get(key, "") or "")
+        if value in NON_PHYSICAL_OBJECTS or "." in value:
+            rule[key] = ""
+
+    feature1 = str(rule.get("Feature1", "") or "")
+    if not feature1:
+        for key in ("Object1", "Object2"):
+            value = str(rule.get(key, "") or "")
+            if value:
+                rule["Feature1"] = value
+                rule[key] = ""
+                feature1 = value
+                break
+
+    for key in ("Object1", "Object2"):
+        if rule.get(key) == feature1:
+            rule[key] = ""
 
 
 def _first_scalar(value: Any) -> str:
@@ -142,13 +168,34 @@ def _normalize_any_values(param: Dict[str, Any]) -> None:
 
 def _normalize_range_values(param: Dict[str, Any]) -> None:
     operators = param.get("Operator", [])
+    values = param.get("Value", [])
+    if (
+        isinstance(operators, list)
+        and isinstance(values, list)
+        and len(operators) > 1
+        and len(operators) == len(values)
+        and all(isinstance(branch, list) and len(branch) == 1 for branch in values)
+    ):
+        for group_idx, ops in enumerate(operators):
+            if not isinstance(ops, list):
+                continue
+            active_ops = [op for op in ops if op]
+            if len(active_ops) != 2 or not all(op in {">", ">=", "<", "<="} for op in active_ops):
+                continue
+            branch_group = values[group_idx][0]
+            if not isinstance(branch_group, list) or len(branch_group) != 1:
+                continue
+            range_match = re.match(r"^\s*([^:]+?)\s*:\s*([^:]+?)\s*$", str(branch_group[0]))
+            if range_match:
+                values[group_idx][0] = [range_match.group(1).strip(), range_match.group(2).strip()]
+        return
+
     for group_idx, ops in enumerate(operators):
         if not isinstance(ops, list):
             continue
         active_ops = [op for op in ops if op]
         if len(active_ops) != 2 or not all(op in {">", ">=", "<", "<="} for op in active_ops):
             continue
-        values = param.get("Value", [])
         if not values or not isinstance(values[0], list):
             continue
         if group_idx < len(values[0]) and isinstance(values[0][group_idx], list) and len(values[0][group_idx]) == 2:
@@ -163,6 +210,10 @@ def _normalize_range_values(param: Dict[str, Any]) -> None:
                         flat.append(group)
             else:
                 flat.append(branch)
+        if len(flat) == 1:
+            range_match = re.match(r"^\s*([^:]+?)\s*:\s*([^:]+?)\s*$", str(flat[0]))
+            if range_match:
+                flat = [range_match.group(1).strip(), range_match.group(2).strip()]
         if len(flat) >= 2:
             param["Value"] = [[[str(flat[0]), str(flat[1])]]]
 
@@ -305,6 +356,7 @@ def _normalize_validation(validation: Dict[str, Any], domain: str, rule: Dict[st
 
 def _normalize_rule(rule: Dict[str, Any], domain: str) -> None:
     _normalize_objects(rule, domain)
+    _normalize_feature_object_shape(rule)
     constraints = rule.setdefault("Constraints", {})
     validations = constraints.setdefault("ValidationParamList", [])
     if not validations:

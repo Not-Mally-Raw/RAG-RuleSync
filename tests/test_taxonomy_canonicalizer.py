@@ -291,3 +291,127 @@ def test_user_param_symbol_alias_is_replaced_with_param_name():
     assert validation.Value == [[["ProportionalityConstant*Slot.Length*SheetMetal.Thickness*Bend.MinRadius"]]]
     assert user_param.ParamName == "ProportionalityConstant"
     assert user_param.Value == [""]
+
+
+def test_non_distance_feature_rule_clears_moduleparams_object_fields():
+    rule = _canonicalize(
+        "generic teardrop hem multi-expression rule",
+        {
+            "domain": "SheetMetal",
+            "bucket": "MultiExpressionValidation",
+            "taxonomy_rules": [
+                {
+                    "Name": "Teardrop hem parameters",
+                    "RuleCategory": "SheetMetal",
+                    "Results": "Validation",
+                    "RuleType": "Feature",
+                    "Feature1": "TearDropHem",
+                    "Object1": "TearDropHem",
+                    "Object2": "ModuleParams",
+                    "Constraints": {
+                        "ValidationParamList": [
+                            {
+                                "ExpName": "TearDropHem.Radius",
+                                "Operator": [["="]],
+                                "Value": [[["0.5*SheetMetal.Thickness"]]],
+                                "AllowedParams": ["SheetMetal.Thickness"],
+                            },
+                            {
+                                "ExpName": "Flange.Length",
+                                "Operator": [[">="]],
+                                "Value": [[["4*SheetMetal.Thickness"]]],
+                                "AllowedParams": ["SheetMetal.Thickness"],
+                            },
+                            {
+                                "ExpName": "TearDropHem.HemOpening",
+                                "Operator": [[">="]],
+                                "Value": [[["0.25*SheetMetal.Thickness"]]],
+                                "AllowedParams": ["SheetMetal.Thickness"],
+                            },
+                        ]
+                    },
+                }
+            ],
+        },
+        "SheetMetal",
+        "MultiExpressionValidation",
+    )
+
+    assert rule.Feature1 == "TearDropHem"
+    assert rule.Object1 == ""
+    assert rule.Object2 == ""
+    assert len(rule.Constraints.ValidationParamList) == 3
+
+
+def test_non_distance_feature_rule_promotes_object_to_feature_when_feature_missing():
+    rule = _canonicalize(
+        "generic hem rule",
+        {
+            "domain": "SheetMetal",
+            "bucket": "MultiExpressionValidation",
+            "taxonomy_rules": [
+                {
+                    "Name": "Hem parameters",
+                    "RuleCategory": "SheetMetal",
+                    "Results": "Validation",
+                    "RuleType": "Feature",
+                    "Feature1": "",
+                    "Object1": "TearDropHem",
+                    "Object2": "ModuleParams",
+                    "Constraints": {
+                        "ValidationParamList": [
+                            {
+                                "ExpName": "TearDropHem.HemOpening",
+                                "Operator": [[">="]],
+                                "Value": [[["0.25*SheetMetal.Thickness"]]],
+                                "AllowedParams": ["SheetMetal.Thickness"],
+                            }
+                        ]
+                    },
+                }
+            ],
+        },
+        "SheetMetal",
+        "MultiExpressionValidation",
+    )
+
+    assert rule.Feature1 == "TearDropHem"
+    assert rule.Object1 == ""
+    assert rule.Object2 == ""
+
+
+def test_compact_colon_range_values_are_expanded():
+    rule = _canonicalize(
+        "For a spoon feature the minimum height should be between 0.5 and 1.2 times sheet thickness",
+        {
+            "domain": "SheetMetal",
+            "bucket": "FeatureRangeValidation",
+            "taxonomy_rules": [
+                {
+                    "Name": "Recommended minimum height of spoon feature",
+                    "RuleCategory": "SheetMetal",
+                    "Results": "Validation",
+                    "RuleType": "Feature",
+                    "Feature1": "Spoon",
+                    "Feature2": "",
+                    "Object1": "",
+                    "Object2": "",
+                    "Constraints": {
+                        "ValidationParamList": [
+                            {
+                                "ExpName": "Spoon.Height",
+                                "Operator": [[">", "<"]],
+                                "Value": [[["0.5:1.2"]]],
+                                "AllowedParams": [""],
+                            }
+                        ]
+                    },
+                }
+            ],
+        },
+        "SheetMetal",
+        "FeatureRangeValidation",
+    )
+
+    validation = rule.Constraints.ValidationParamList[0]
+    assert validation.Value == [[["0.5", "1.2"]]]
