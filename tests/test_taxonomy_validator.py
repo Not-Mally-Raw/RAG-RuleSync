@@ -477,3 +477,149 @@ def test_validator_accepts_branch_specific_condition_operator_table():
 
     assert envelope is not None
     assert errors == []
+
+
+def test_unwrap_nested_envelope_payload():
+    raw_payload = {
+        "domain": "SheetMetal",
+        "bucket": "MultiExpressionValidation",
+        "taxonomy_rules": [
+            {
+                "domain": "SheetMetal",
+                "bucket": "MultiExpressionValidation",
+                "taxonomy_rules": [
+                    {
+                        "Name": "Dimple parameters",
+                        "RuleCategory": "SheetMetal",
+                        "Results": "Validation",
+                        "RuleType": "Feature",
+                        "Feature1": "Dimple",
+                        "Constraints": {
+                            "ValidationParamList": [
+                                {
+                                    "ExpName": "Dimple.DieInnerRadius",
+                                    "Operator": [[">="]],
+                                    "Value": [[["2.0"]]],
+                                    "AllowedParams": [""],
+                                }
+                            ]
+                        }
+                    }
+                ]
+            }
+        ]
+    }
+    payload = normalize_envelope_payload(raw_payload, fallback_domain="SheetMetal", fallback_bucket="MultiExpressionValidation")
+    assert payload["domain"] == "SheetMetal"
+    assert payload["bucket"] == "MultiExpressionValidation"
+    assert len(payload["taxonomy_rules"]) == 1
+    assert payload["taxonomy_rules"][0]["Feature1"] == "Dimple"
+
+
+def test_grounding_allows_pmi_tolerance_attributes_without_text():
+    rule_text = "Bends should be toleranced plus or minus one-half degree at a location adjacent to the bends."
+    payload = normalize_envelope_payload(
+        {
+            "domain": "General",
+            "bucket": "FeatureSimpleValidation",
+            "taxonomy_rules": [
+                {
+                    "Name": "Bend tolerance",
+                    "RuleCategory": "General",
+                    "Results": "Validation",
+                    "RuleType": "Feature",
+                    "Feature1": "Bend",
+                    "Constraints": {
+                        "ValidationParamList": [
+                            {
+                                    "ExpName": "PMI.Angularity",
+                                    "Operator": [["<="]],
+                                    "Value": [[["0.5"]]],
+                                    "AllowedParams": [""],
+                            }
+                        ]
+                    }
+                }
+            ]
+        },
+        fallback_domain="General",
+        fallback_bucket="FeatureSimpleValidation"
+    )
+    errors = validate_grounding(rule_text, payload)
+    assert errors == []
+
+
+def test_grounding_allows_curl_and_opening_aliases_for_hem():
+    rule_text = "The minimum radius is two times the material thickness with an opening to a minimum of one material thickness."
+    payload = normalize_envelope_payload(
+        {
+            "domain": "SheetMetal",
+            "bucket": "MultiExpressionValidation",
+            "taxonomy_rules": [
+                {
+                    "Name": "Curl radius and opening",
+                    "RuleCategory": "SheetMetal",
+                    "Results": "Validation",
+                    "RuleType": "Feature",
+                    "Feature1": "RolledHem",
+                    "Constraints": {
+                        "ValidationParamList": [
+                            {
+                                "ExpName": "RolledHem.Radius",
+                                "Operator": [[">="]],
+                                "Value": [[["2.0*SheetMetal.Thickness"]]],
+                                "AllowedParams": ["SheetMetal.Thickness"],
+                            },
+                            {
+                                "ExpName": "RolledHem.HemOpening",
+                                "Operator": [[">="]],
+                                "Value": [[["1.0*SheetMetal.Thickness"]]],
+                                "AllowedParams": ["SheetMetal.Thickness"],
+                            }
+                        ]
+                    }
+                }
+            ]
+        },
+        fallback_domain="SheetMetal",
+        fallback_bucket="MultiExpressionValidation"
+    )
+    errors = validate_grounding(rule_text, payload)
+    assert errors == []
+
+
+def test_grounding_allows_edge_alias_for_part_edge():
+    rule_text = "The minimum distance a rib should be from an edge in a perpendicular plane is four times the material thickness plus the radius of the rib."
+    payload = normalize_envelope_payload(
+        {
+            "domain": "Injection Molding",
+            "bucket": "DistanceRule",
+            "taxonomy_rules": [
+                {
+                    "Name": "Rib to edge distance",
+                    "RuleCategory": "Injection Molding",
+                    "Results": "Validation",
+                    "RuleType": "Feature",
+                    "Feature1": "Distance",
+                    "Object1": "Rib",
+                    "Object2": "Part Edge",
+                    "Constraints": {
+                        "ValidationParamList": [
+                            {
+                                "ExpName": "Distance.MinValue/InjectionMolding.NominalThickness",
+                                "Operator": [[">="]],
+                                "Value": [[["4.0*InjectionMolding.NominalThickness + Rib.RadiusAtBot"]]],
+                                "AllowedParams": ["InjectionMolding.NominalThickness", "Rib.RadiusAtBot"],
+                            }
+                        ]
+                    }
+                }
+            ]
+        },
+        fallback_domain="Injection Molding",
+        fallback_bucket="DistanceRule"
+    )
+    errors = validate_grounding(rule_text, payload)
+    assert errors == []
+
+

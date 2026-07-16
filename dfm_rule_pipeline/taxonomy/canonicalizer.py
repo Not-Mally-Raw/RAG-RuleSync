@@ -93,7 +93,7 @@ def _normalize_feature_object_shape(rule: Dict[str, Any]) -> None:
 def _first_scalar(value: Any) -> str:
     try:
         return str(value[0][0][0])
-    except Exception:
+    except (IndexError, KeyError, TypeError):
         return ""
 
 
@@ -140,6 +140,9 @@ def _normalize_operator_words(param: Dict[str, Any]) -> None:
                 changed = True
             elif lowered in {"in", "any", "one of", "from list"}:
                 clean_group.append("ANY")
+                changed = True
+            elif op_str == "==":
+                clean_group.append("=")
                 changed = True
             else:
                 clean_group.append(op_str)

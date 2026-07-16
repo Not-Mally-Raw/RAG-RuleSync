@@ -1,3 +1,4 @@
+import logging
 from typing import Any, Dict, List
 
 from .bucket_registry import classify_bucket
@@ -103,13 +104,23 @@ class TaxonomyFormalizationService:
                 prepared_repair.get("bucket", bucket),
                 errors_to_dicts(repair_errors),
             )
-        except Exception as exc:
+        except (ConnectionError, TimeoutError, OSError) as exc:
+            logging.getLogger(__name__).error("LLM call failed for rule: %s", rule_text, exc_info=True)
             return self._review_response(
                 rule_text,
                 "llm_failed",
                 domain,
                 bucket,
-                [{"code": "llm_failed", "message": str(exc), "location": "$", "suggestion": "Check LLM availability and JSON-only response."}],
+                [{"code": "llm_failed", "message": str(exc), "location": "$", "suggestion": "Check LLM availability and network connectivity."}],
+            )
+        except Exception as exc:
+            logging.getLogger(__name__).error("Unexpected error formalizing rule: %s", rule_text, exc_info=True)
+            return self._review_response(
+                rule_text,
+                "internal_error",
+                domain,
+                bucket,
+                [{"code": "internal_error", "message": str(exc), "location": "$", "suggestion": "This is an internal pipeline error. Check server logs for the full stack trace."}],
             )
 
         prepared_payload = self._prepare_payload(
