@@ -1,16 +1,41 @@
-# React + Vite
+# RAG-RuleSync Frontend
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+React/Vite UI for document ingestion and rule formalization.
 
-Currently, two official plugins are available:
+## Run
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Oxc](https://oxc.rs)
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/)
+Start the FastAPI backend from the repo root:
 
-## React Compiler
+```bash
+python app.py
+```
 
-The React Compiler is not enabled on this template because of its impact on dev & build performances. To add it, see [this documentation](https://react.dev/learn/react-compiler/installation).
+Start the frontend from this folder:
 
-## Expanding the ESLint configuration
+```bash
+npm run dev
+```
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+Open:
+
+```text
+http://127.0.0.1:5173/
+```
+
+The frontend checks backend health at `http://localhost:8000/`.
+
+## Taxonomy V3
+
+Use the **Rule Compiler** tab, select **Taxonomy V3**, enter one rule per line, optionally choose a domain override, and run the compiler.
+
+The Taxonomy V3 mode calls:
+
+```text
+POST /process-rules-taxonomy
+```
+
+Legacy mode is still available and calls:
+
+```text
+POST /process-rules
+```

@@ -1,0 +1,48 @@
+{
+  "Name": "",
+  "RuleCategory": "",
+  "Results": "",
+  "RuleType": "",
+  "Feature1": "",
+  "Feature2": "",
+  "Object1": "",
+  "Object2": "",
+  "Constraints": {
+    "FilterParamList": [
+      {
+        "ExpName": "",
+        "Operator": [""],
+        "Value": [""]
+      }
+    ],
+    "ConditionParamList": [
+      {
+        "ExpName": "",
+        "Operator": [[""]],
+        "Value": [[[""]]]
+      }
+    ],
+    "ValidationParamList": [
+      {
+        "ExpName": "",
+        "Operator": [[""]],
+        "Value": [[[""]]],
+        "AllowedParams": [""]
+      }
+    ],
+    "AdditionalParamList": [
+      {
+        "ExpName": ""
+      }
+    ],
+    "UserParamList": [
+      {
+        "ParamName": "",
+        "DisplayName": "",
+        "Value": [""],
+        "MinValue": "",
+        "MaxValue": ""
+      }
+    ]
+  }
+}

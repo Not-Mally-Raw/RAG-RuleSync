@@ -1,33 +1,75 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { 
-  Upload, 
-  Settings, 
-  FileText, 
-  Trash2, 
-  ArrowRight, 
-  CheckCircle, 
-  AlertTriangle, 
-  Cpu, 
-  Download, 
-  Plus, 
-  Copy, 
-  Sparkles,
-  HelpCircle,
+import { useEffect, useRef, useState } from 'react';
+import {
+  AlertTriangle,
+  ArrowRight,
+  CheckCircle,
+  Copy,
+  Cpu,
+  Download,
+  FileJson,
   FileSpreadsheet,
+  FileText,
+  Moon,
+  Sparkles,
   Sun,
-  Moon
+  Trash2,
+  Upload,
 } from 'lucide-react';
 
-const API_BASE_URL = 'http://localhost:8000';
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
+
+const DOMAIN_OPTIONS = [
+  { label: 'Auto detect', value: '' },
+  { label: 'SheetMetal', value: 'Sheetmetal' },
+  { label: 'Drilling', value: 'Drilling' },
+  { label: 'Assembly', value: 'Assembly' },
+  { label: 'Injection Molding', value: 'Injection Molding' },
+  { label: 'Milling', value: 'Milling' },
+  { label: 'Turning', value: 'Turning' },
+  { label: 'Tubing', value: 'Tubing' },
+  { label: 'Die Casting', value: 'Die Casting' },
+  { label: 'Additive Manufacturing', value: 'Additive Manufacturing' },
+  { label: 'Sheetmetal Forming', value: 'Sheetmetal Forming' },
+  { label: 'General', value: 'General' },
+];
+
+const SAMPLE_TAXONOMY_RULES = [
+  'Distance between bridges should be at least 4.5 times sheet thickness',
+  'If a hole is blind, total depth to diameter ratio is 2.0; otherwise it is 4.0',
+  'Material must be one of Steel, Aluminium, or Brass',
+];
+
+function toJsonText(value) {
+  return JSON.stringify(value, null, 2);
+}
+
+function downloadBlob(filename, content, type) {
+  const blob = new Blob([content], { type });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement('a');
+  link.href = url;
+  link.download = filename;
+  document.body.appendChild(link);
+  link.click();
+  document.body.removeChild(link);
+  URL.revokeObjectURL(url);
+}
+
+function getStatusClass(status = '') {
+  const normalized = status.toLowerCase();
+  if (normalized.includes('success')) return 'success';
+  if (normalized.includes('skipped')) return 'skipped';
+  if (normalized.includes('deferred')) return 'deferred';
+  if (normalized.includes('review') || normalized.includes('fail')) return 'error';
+  return 'deferred';
+}
 
 function App() {
-  const [activeTab, setActiveTab] = useState('upload'); // 'upload' | 'formalize'
-  const [serverStatus, setServerStatus] = useState('checking'); // 'checking' | 'online' | 'offline'
-  const [theme, setTheme] = useState(() => {
-    return localStorage.getItem('theme') || 'light';
-  });
-  
-  // Tab 1: Upload states
+  const [activeTab, setActiveTab] = useState('formalize');
+  const [compilerMode, setCompilerMode] = useState('taxonomy');
+  const [serverStatus, setServerStatus] = useState('checking');
+  const [theme, setTheme] = useState(() => localStorage.getItem('theme') || 'light');
+
   const [file, setFile] = useState(null);
   const [isDragOver, setIsDragOver] = useState(false);
   const [uploading, setUploading] = useState(false);
@@ -35,230 +77,291 @@ function App() {
   const [selectedRules, setSelectedRules] = useState(new Set());
   const fileInputRef = useRef(null);
 
-  // Tab 2: Formalize Builder states
-  const [ruleInput, setRuleInput] = useState('');
+  const [ruleInput, setRuleInput] = useState(SAMPLE_TAXONOMY_RULES[0]);
+  const [domainOverride, setDomainOverride] = useState('');
   const [processing, setProcessing] = useState(false);
   const [formalizedRules, setFormalizedRules] = useState([]);
+  const [requestError, setRequestError] = useState('');
 
-  // Check server health
   useEffect(() => {
     const checkServer = async () => {
       try {
         const response = await fetch(`${API_BASE_URL}/`);
-        if (response.ok) {
-          setServerStatus('online');
-        } else {
-          setServerStatus('offline');
-        }
-      } catch (err) {
+        setServerStatus(response.ok ? 'online' : 'offline');
+      } catch {
         setServerStatus('offline');
       }
     };
+
     checkServer();
     const interval = setInterval(checkServer, 10000);
     return () => clearInterval(interval);
   }, []);
 
-  // Update theme attribute on mount and theme changes
   useEffect(() => {
     document.documentElement.setAttribute('data-theme', theme);
     localStorage.setItem('theme', theme);
   }, [theme]);
 
-  // Handle file drop
-  const handleDragOver = (e) => {
-    e.preventDefault();
-    setIsDragOver(true);
+  const setRulesFromLines = (lines) => {
+    setRuleInput(lines.join('\n'));
+    setFormalizedRules([]);
+    setRequestError('');
   };
 
-  const handleDragLeave = () => {
-    setIsDragOver(false);
-  };
-
-  const handleDrop = (e) => {
-    e.preventDefault();
-    setIsDragOver(false);
-    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
-      const droppedFile = e.dataTransfer.files[0];
-      if (droppedFile.type === 'application/pdf') {
-        setFile(droppedFile);
-      } else {
-        alert('Please drop a valid PDF file.');
-      }
+  const handleFileChange = (event) => {
+    const selectedFile = event.target.files?.[0];
+    if (selectedFile) {
+      setFile(selectedFile);
     }
   };
 
-  const handleFileChange = (e) => {
-    if (e.target.files && e.target.files.length > 0) {
-      setFile(e.target.files[0]);
+  const handleDrop = (event) => {
+    event.preventDefault();
+    setIsDragOver(false);
+    const droppedFile = event.dataTransfer.files?.[0];
+    if (!droppedFile) return;
+    if (droppedFile.type !== 'application/pdf') {
+      setRequestError('Please drop a PDF file.');
+      return;
     }
+    setFile(droppedFile);
   };
 
-  // Upload PDF
   const triggerUpload = async () => {
     if (!file) return;
+
     setUploading(true);
+    setRequestError('');
     setExtractedRules([]);
     setSelectedRules(new Set());
-    
+
     const formData = new FormData();
     formData.append('file', file);
-    
+
     try {
       const response = await fetch(`${API_BASE_URL}/upload-document`, {
         method: 'POST',
         body: formData,
       });
-      
+
       if (!response.ok) {
-        throw new Error('API server returned an error');
+        const detail = await response.text();
+        throw new Error(detail || 'Document extraction failed.');
       }
-      
-      const data = await response.json();
-      setExtractedRules(data);
-    } catch (err) {
-      alert(`Error extracting document: ${err.message}`);
+
+      setExtractedRules(await response.json());
+    } catch (error) {
+      setRequestError(error.message);
     } finally {
       setUploading(false);
     }
   };
 
-  // Toggle selection of individual rules
   const toggleRuleSelection = (index) => {
-    const nextSelected = new Set(selectedRules);
-    if (nextSelected.has(index)) {
-      nextSelected.delete(index);
-    } else {
-      nextSelected.add(index);
-    }
-    setSelectedRules(nextSelected);
+    setSelectedRules((previous) => {
+      const next = new Set(previous);
+      if (next.has(index)) {
+        next.delete(index);
+      } else {
+        next.add(index);
+      }
+      return next;
+    });
   };
 
-  // Select/Deselect all rules
   const toggleSelectAll = () => {
     if (selectedRules.size === extractedRules.length) {
       setSelectedRules(new Set());
-    } else {
-      const allIdx = new Set(extractedRules.map((_, i) => i));
-      setSelectedRules(allIdx);
+      return;
     }
+    setSelectedRules(new Set(extractedRules.map((_, index) => index)));
   };
 
-  // Send extracted rules to formalize builder
   const sendToBuilder = () => {
-    const indicesToSend = selectedRules.size > 0 
-      ? Array.from(selectedRules) 
-      : extractedRules.map((_, i) => i);
-      
-    const rulesToSend = indicesToSend.map(idx => extractedRules[idx]);
-    
-    if (rulesToSend.length === 0) return;
-    
-    const text = rulesToSend.map(r => r.resolved_rule_text || r.rule_text).join('\n');
-    setRuleInput(text);
+    const indexes = selectedRules.size > 0 ? Array.from(selectedRules) : extractedRules.map((_, index) => index);
+    const lines = indexes
+      .map((index) => extractedRules[index])
+      .map((rule) => rule.resolved_rule_text || rule.rule_text)
+      .filter(Boolean);
+
+    if (lines.length === 0) return;
+    setRulesFromLines(lines);
+    setCompilerMode('taxonomy');
     setActiveTab('formalize');
   };
 
-  // Run Formalize / Refinement Pipeline
+  const buildPayload = () => {
+    const lines = ruleInput
+      .split('\n')
+      .map((line) => line.trim())
+      .filter(Boolean);
+
+    return {
+      rules: lines.map((line) => ({
+        rule_text: line,
+        ...(domainOverride ? { rule_type: domainOverride } : {}),
+      })),
+    };
+  };
+
   const runFormalization = async () => {
-    const lines = ruleInput.split('\n').map(l => l.trim()).filter(l => l !== '');
-    if (lines.length === 0) {
-      alert('Please enter at least one rule sentence.');
+    const payload = buildPayload();
+    if (payload.rules.length === 0) {
+      setRequestError('Enter at least one rule sentence.');
       return;
     }
-    
+
+    const endpoint = compilerMode === 'taxonomy' ? '/process-rules-taxonomy' : '/process-rules';
+
     setProcessing(true);
     setFormalizedRules([]);
-    
-    const payload = {
-      rules: lines.map(line => ({
-        rule_text: line
-      }))
-    };
-    
+    setRequestError('');
+
     try {
-      const response = await fetch(`${API_BASE_URL}/process-rules`, {
+      const response = await fetch(`${API_BASE_URL}${endpoint}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
+        body: JSON.stringify(payload),
       });
-      
+
       if (!response.ok) {
-        throw new Error('API server returned an error');
+        const detail = await response.text();
+        throw new Error(detail || `${endpoint} returned ${response.status}`);
       }
-      
-      const data = await response.json();
-      setFormalizedRules(data);
-    } catch (err) {
-      alert(`Error formalizing rules: ${err.message}`);
+
+      setFormalizedRules(await response.json());
+    } catch (error) {
+      setRequestError(error.message);
     } finally {
       setProcessing(false);
     }
   };
 
-  // Download formalized output as CSV
-  const downloadCSV = () => {
-    if (formalizedRules.length === 0) return;
-    
-    const headers = ['RuleText', 'Status', 'DecisionCode', 'RuleCategory', 'Feature1', 'Feature2', 'Object1', 'Object2', 'ExpName', 'Operator', 'Recom'];
-    
-    const rows = formalizedRules.map(r => {
-      const dfm = r.dfm_rule || {};
-      return [
-        `"${r.rule_text.replace(/"/g, '""')}"`,
-        r.status || '',
-        r.decision_code || '',
-        r.rule_category || '',
-        dfm.Feature1 || '',
-        dfm.Feature2 || '',
-        dfm.Object1 || '',
-        dfm.Object2 || '',
-        dfm.ExpName || '',
-        dfm.Operator || '',
-        dfm.Recom !== undefined ? dfm.Recom : ''
-      ];
-    });
-    
-    const csvContent = [
-      headers.join(','),
-      ...rows.map(e => e.join(','))
-    ].join('\n');
-    
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.setAttribute('href', url);
-    link.setAttribute('download', 'dfm_rules_compiled.csv');
-    document.body.appendChild(link);
-    link.click();
-    document.body.removeChild(link);
+  const copyToClipboard = async (value) => {
+    await navigator.clipboard.writeText(typeof value === 'string' ? value : toJsonText(value));
   };
 
-  const copyToClipboard = (text) => {
-    navigator.clipboard.writeText(text);
-    alert('Copied DFM rule to clipboard!');
+  const exportResults = () => {
+    if (formalizedRules.length === 0) return;
+    const name = compilerMode === 'taxonomy' ? 'taxonomy_v3_results.json' : 'legacy_formalization_results.json';
+    downloadBlob(name, toJsonText(formalizedRules), 'application/json;charset=utf-8');
+  };
+
+  const renderTaxonomyOutput = (result, index) => {
+    const statusClass = getStatusClass(result.status);
+    const rules = result.taxonomy_rules || [];
+    const errors = result.validation_errors || [];
+
+    return (
+      <div key={`${result.rule_text}-${index}`} className={`formalized-card ${statusClass}`}>
+        <div className="formalized-row-header">
+          <div className="taxonomy-title-group">
+            <span className="rule-category-tag">{result.domain || 'Unknown domain'}</span>
+            <h4>{result.bucket || 'Unclassified bucket'}</h4>
+          </div>
+          <span className={`badge badge-${statusClass}`}>{result.status}</span>
+        </div>
+
+        <p className="rule-preview">"{result.rule_text}"</p>
+
+        <div className="metadata-grid">
+          <div>
+            <span>Decision</span>
+            <strong>{result.decision_code || '-'}</strong>
+          </div>
+          <div>
+            <span>Rules</span>
+            <strong>{rules.length}</strong>
+          </div>
+          <div>
+            <span>Validation Errors</span>
+            <strong>{errors.length}</strong>
+          </div>
+        </div>
+
+        {errors.length > 0 && (
+          <div className="error-list">
+            {errors.map((error, errorIndex) => (
+              <div key={`${error.code}-${errorIndex}`} className="error-item">
+                <AlertTriangle size={15} />
+                <div>
+                  <strong>{error.code}</strong>
+                  <p>{error.message}</p>
+                  {error.suggestion && <small>{error.suggestion}</small>}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {rules.length > 0 ? (
+          <div className="taxonomy-rules-stack">
+            {rules.map((taxonomyRule, ruleIndex) => (
+              <div key={`${taxonomyRule.Name}-${ruleIndex}`} className="taxonomy-rule-block">
+                <div className="taxonomy-rule-header">
+                  <span>{taxonomyRule.Name || `Taxonomy Rule ${ruleIndex + 1}`}</span>
+                  <button className="btn btn-secondary compact-btn" onClick={() => copyToClipboard(taxonomyRule)}>
+                    <Copy size={13} />
+                    Copy
+                  </button>
+                </div>
+                <pre className="json-block">{toJsonText(taxonomyRule)}</pre>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="no-logic-tag">No validated taxonomy rule was returned.</div>
+        )}
+      </div>
+    );
+  };
+
+  const renderLegacyOutput = (result, index) => {
+    const statusClass = getStatusClass(result.status);
+
+    return (
+      <div key={`${result.rule_text}-${index}`} className={`formalized-card ${statusClass}`}>
+        <div className="formalized-row-header">
+          <span className="rule-category-tag">{result.rule_category || 'Unknown category'}</span>
+          <span className={`badge badge-${statusClass}`}>{result.status || 'Success'}</span>
+        </div>
+        <p className="rule-preview">"{result.rule_text}"</p>
+        {result.dfm_rule ? (
+          <>
+            <pre className="json-block">{toJsonText(result.dfm_rule)}</pre>
+            <button className="btn btn-secondary compact-btn" onClick={() => copyToClipboard(result.dfm_rule)}>
+              <Copy size={13} />
+              Copy JSON
+            </button>
+          </>
+        ) : (
+          <div className="no-logic-tag">Status: {result.decision_code || 'No structured rule returned'}</div>
+        )}
+      </div>
+    );
   };
 
   return (
     <div className="app-container">
-      {/* Header Section */}
       <header className="app-header">
         <div className="brand-section">
           <Cpu className="brand-logo" size={32} />
           <div>
             <h1 className="brand-title">RAG-RuleSync</h1>
-            <p className="brand-subtitle">Enterprise DFM Rule Compiler</p>
+            <p className="brand-subtitle">DFM Taxonomy Compiler</p>
           </div>
         </div>
-        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+
+        <div className="header-actions">
           <div className="server-status">
-            <span className={`status-dot ${serverStatus === 'online' ? 'online' : ''}`}></span>
+            <span className={`status-dot ${serverStatus === 'online' ? 'online' : ''}`} />
             <span>
-              API Status: {serverStatus === 'online' ? 'Online' : serverStatus === 'offline' ? 'Offline' : 'Checking...'}
+              API Status: {serverStatus === 'online' ? 'Online' : serverStatus === 'offline' ? 'Offline' : 'Checking'}
             </span>
           </div>
-          <button 
-            className="btn btn-secondary btn-icon-only" 
+          <button
+            className="btn btn-secondary btn-icon-only"
             title={`Switch to ${theme === 'light' ? 'dark' : 'light'} theme`}
             onClick={() => setTheme(theme === 'light' ? 'dark' : 'light')}
           >
@@ -267,37 +370,39 @@ function App() {
         </div>
       </header>
 
-      {/* Tabs Switcher */}
       <div className="tabs-navigation">
-        <button 
-          className={`tab-btn ${activeTab === 'upload' ? 'active' : ''}`}
-          onClick={() => setActiveTab('upload')}
-        >
+        <button className={`tab-btn ${activeTab === 'formalize' ? 'active' : ''}`} onClick={() => setActiveTab('formalize')}>
+          <Sparkles size={18} />
+          Rule Compiler
+        </button>
+        <button className={`tab-btn ${activeTab === 'upload' ? 'active' : ''}`} onClick={() => setActiveTab('upload')}>
           <Upload size={18} />
           Document Ingestion
         </button>
-        <button 
-          className={`tab-btn ${activeTab === 'formalize' ? 'active' : ''}`}
-          onClick={() => setActiveTab('formalize')}
-        >
-          <Sparkles size={18} />
-          DFM Formalization
-        </button>
       </div>
 
-      {/* View 1: Document Upload */}
+      {requestError && (
+        <div className="alert-banner">
+          <AlertTriangle size={18} />
+          <span>{requestError}</span>
+        </div>
+      )}
+
       {activeTab === 'upload' && (
         <div className="view-grid">
-          {/* Controls Panel */}
           <div className="glass-panel">
             <h3 className="panel-title">
               <FileText size={20} />
               PDF Upload
             </h3>
-            <div 
+
+            <div
               className={`upload-zone ${isDragOver ? 'dragging' : ''}`}
-              onDragOver={handleDragOver}
-              onDragLeave={handleDragLeave}
+              onDragOver={(event) => {
+                event.preventDefault();
+                setIsDragOver(true);
+              }}
+              onDragLeave={() => setIsDragOver(false)}
               onDrop={handleDrop}
               onClick={() => fileInputRef.current?.click()}
             >
@@ -305,40 +410,35 @@ function App() {
                 <Upload size={28} />
               </div>
               <div>
-                <p className="upload-text-main">Drag & drop spec PDF here</p>
+                <p className="upload-text-main">Drag a specification PDF here</p>
                 <p className="upload-text-sub">or click to browse files</p>
               </div>
-              <input 
-                type="file" 
-                ref={fileInputRef} 
-                onChange={handleFileChange}
-                accept="application/pdf"
-                style={{ display: 'none' }}
-              />
+              <input ref={fileInputRef} type="file" onChange={handleFileChange} accept="application/pdf" hidden />
             </div>
 
             {file && (
               <div className="selected-file-card">
                 <div className="file-info">
                   <FileSpreadsheet size={18} className="brand-logo" />
-                  <span className="file-name" title={file.name}>{file.name}</span>
+                  <span className="file-name" title={file.name}>
+                    {file.name}
+                  </span>
                 </div>
-                <button className="remove-file-btn" onClick={() => setFile(null)}>
+                <button className="remove-file-btn" onClick={() => setFile(null)} title="Remove file">
                   <Trash2 size={16} />
                 </button>
               </div>
             )}
 
-            <button 
-              className="btn btn-primary" 
-              style={{ width: '100%', marginTop: '1.5rem' }}
+            <button
+              className="btn btn-primary full-width-button"
               disabled={!file || uploading || serverStatus !== 'online'}
               onClick={triggerUpload}
             >
               {uploading ? (
                 <>
-                  <div className="spinner" style={{ width: '16px', height: '16px' }}></div>
-                  Extracting Rules...
+                  <div className="spinner small-spinner" />
+                  Extracting Rules
                 </>
               ) : (
                 <>
@@ -349,78 +449,68 @@ function App() {
             </button>
           </div>
 
-          {/* Results Panel */}
           <div className="glass-panel">
             {uploading ? (
               <div className="processing-overlay">
-                <div className="spinner" style={{ width: '40px', height: '40px' }}></div>
-                <p className="processing-text">Running Level-1 Parsing Pipeline</p>
-                <p className="processing-sub">Chunking document, indexing vectors, and querying anchors...</p>
+                <div className="spinner large-spinner" />
+                <p className="processing-text">Running document extraction</p>
+                <p className="processing-sub">Parsing, chunking, and assembling candidate rules.</p>
               </div>
             ) : extractedRules.length > 0 ? (
-              <div>
+              <>
                 <div className="results-header-section">
                   <div>
-                    <h3 className="panel-title" style={{ marginBottom: '0.2rem' }}>
+                    <h3 className="panel-title inline-title">
                       Extracted Candidate Rules
                       <span className="count-badge">{extractedRules.length} found</span>
                     </h3>
-                    <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
-                      Select rules to send to the DFM mathematical formalizer
-                    </p>
+                    <p className="muted-copy">Selected rules can be sent directly to the taxonomy compiler.</p>
                   </div>
                   <div className="results-actions">
-                    <button className="btn btn-secondary btn-icon-only" title="Toggle Select All" onClick={toggleSelectAll}>
+                    <button className="btn btn-secondary btn-icon-only" title="Toggle select all" onClick={toggleSelectAll}>
                       <CheckCircle size={18} />
                     </button>
                     <button className="btn btn-primary" onClick={sendToBuilder}>
-                      Send to Refinement
+                      Send to Compiler
                       <ArrowRight size={16} />
                     </button>
                   </div>
                 </div>
 
                 <div className="rules-list">
-                  {extractedRules.map((rule, idx) => {
-                    const isSel = selectedRules.has(idx);
+                  {extractedRules.map((rule, index) => {
+                    const isSelected = selectedRules.has(index);
                     return (
-                      <div 
-                        key={idx} 
-                        className={`rule-card ${isSel ? 'is-selected' : ''}`}
-                        onClick={() => toggleRuleSelection(idx)}
-                        style={{ cursor: 'pointer' }}
+                      <button
+                        key={`${rule.rule_text}-${index}`}
+                        className={`rule-card selectable-card ${isSelected ? 'is-selected' : ''}`}
+                        onClick={() => toggleRuleSelection(index)}
                       >
                         <div className="rule-card-header">
-                          <span>Rule #{idx + 1}</span>
-                          {rule.source_window_ids && (
-                            <div className="window-tags">
-                              {rule.source_window_ids.slice(0, 3).map((wId, wIdx) => (
-                                <span key={wIdx} className="window-tag">{wId.split('_').slice(-2).join('_')}</span>
-                              ))}
-                            </div>
-                          )}
+                          <span>Rule #{index + 1}</span>
+                          {isSelected && <span className="selected-label">Selected</span>}
                         </div>
                         <div className="rule-text-block">
                           {rule.rule_text !== rule.resolved_rule_text && (
                             <>
-                              <div className="rule-text-label">Verbatim:</div>
+                              <div className="rule-text-label">Verbatim</div>
                               <div className="rule-text-verbatim">{rule.rule_text}</div>
                             </>
                           )}
-                          <div className="rule-text-label">Resolved Context:</div>
+                          <div className="rule-text-label">Resolved Context</div>
                           <div className="rule-text-resolved">{rule.resolved_rule_text || rule.rule_text}</div>
                         </div>
-                      </div>
+                      </button>
                     );
                   })}
                 </div>
-              </div>
+              </>
             ) : (
               <div className="empty-state">
                 <FileText size={48} className="empty-state-icon" />
                 <div>
-                  <h4 style={{ color: '#ffffff', marginBottom: '0.25rem' }}>No Data Extracted</h4>
-                  <p style={{ fontSize: '0.9rem' }}>Upload a PDF specification guidelines sheet to run the rule miner.</p>
+                  <h4>No rules extracted yet</h4>
+                  <p>Upload a PDF guideline document to mine candidate rules.</p>
                 </div>
               </div>
             )}
@@ -428,142 +518,147 @@ function App() {
         </div>
       )}
 
-      {/* View 2: DFM Formalization */}
       {activeTab === 'formalize' && (
         <div className="view-grid">
-          {/* Rules Input Panel */}
           <div className="glass-panel">
             <h3 className="panel-title">
               <Cpu size={20} />
-              DFM Rule Input
+              Rule Input
             </h3>
-            <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)', marginBottom: '1.25rem' }}>
-              Paste or type your manufacturing rule sentence below. You can enter multiple rules by putting each on a new line.
-            </p>
 
-            <div style={{ marginBottom: '1rem' }}>
-              <textarea 
-                className="input-field"
-                placeholder="Example: Wall thickness must be at least 1.5mm for injection molding."
-                rows={10}
-                style={{ resize: 'vertical', minHeight: '200px', lineHeight: '1.5' }}
-                value={ruleInput}
-                onChange={(e) => setRuleInput(e.target.value)}
-              />
-            </div>
-
-            <div style={{ display: 'flex', gap: '0.75rem' }}>
-              <button 
-                className="btn btn-secondary" 
-                style={{ flex: 1 }}
-                onClick={() => setRuleInput('')}
-                disabled={!ruleInput.trim()}
+            <label className="field-label">Compiler</label>
+            <div className="segmented-control" aria-label="Compiler mode">
+              <button
+                className={`segment-btn ${compilerMode === 'taxonomy' ? 'active' : ''}`}
+                onClick={() => {
+                  setCompilerMode('taxonomy');
+                  setFormalizedRules([]);
+                }}
               >
-                Clear Input
+                <FileJson size={16} />
+                Taxonomy V3
+              </button>
+              <button
+                className={`segment-btn ${compilerMode === 'legacy' ? 'active' : ''}`}
+                onClick={() => {
+                  setCompilerMode('legacy');
+                  setFormalizedRules([]);
+                }}
+              >
+                <Sparkles size={16} />
+                Legacy
               </button>
             </div>
 
-            <button 
-              className="btn btn-primary" 
-              style={{ width: '100%', marginTop: '1rem' }}
+            <label className="field-label" htmlFor="domainOverride">
+              Domain override
+            </label>
+            <select
+              id="domainOverride"
+              className="select-field"
+              value={domainOverride}
+              onChange={(event) => setDomainOverride(event.target.value)}
+            >
+              {DOMAIN_OPTIONS.map((domain) => (
+                <option key={domain.label} value={domain.value}>
+                  {domain.label}
+                </option>
+              ))}
+            </select>
+
+            <label className="field-label" htmlFor="ruleInput">
+              Rules
+            </label>
+            <textarea
+              id="ruleInput"
+              className="input-field rule-textarea"
+              placeholder="Enter one manufacturing rule per line."
+              value={ruleInput}
+              onChange={(event) => setRuleInput(event.target.value)}
+            />
+
+            <div className="button-row">
+              <button className="btn btn-secondary" onClick={() => setRulesFromLines(SAMPLE_TAXONOMY_RULES)}>
+                Load Samples
+              </button>
+              <button className="btn btn-secondary" onClick={() => setRulesFromLines([])} disabled={!ruleInput.trim()}>
+                Clear
+              </button>
+            </div>
+
+            <button
+              className="btn btn-primary full-width-button"
               disabled={processing || !ruleInput.trim() || serverStatus !== 'online'}
               onClick={runFormalization}
             >
               {processing ? (
                 <>
-                  <div className="spinner" style={{ width: '16px', height: '16px' }}></div>
-                  Processing...
+                  <div className="spinner small-spinner" />
+                  Processing
                 </>
               ) : (
                 <>
                   <Sparkles size={16} />
-                  Compile Constraints
+                  {compilerMode === 'taxonomy' ? 'Run Taxonomy V3' : 'Run Legacy Formalizer'}
                 </>
               )}
             </button>
+
+            <p className="api-note">
+              {compilerMode === 'taxonomy' ? 'Calls POST /process-rules-taxonomy' : 'Calls POST /process-rules'}
+            </p>
           </div>
 
-          {/* Formalized Outputs Panel */}
           <div className="glass-panel">
             {processing ? (
               <div className="processing-overlay">
-                <div className="spinner" style={{ width: '40px', height: '40px' }}></div>
-                <p className="processing-text">Running Refinement Pipeline</p>
-                <p className="processing-sub">Resolving schema keys, parsing equations, and normalising CAD namespaces...</p>
+                <div className="spinner large-spinner" />
+                <p className="processing-text">
+                  {compilerMode === 'taxonomy' ? 'Building taxonomy schema' : 'Running legacy formalization'}
+                </p>
+                <p className="processing-sub">
+                  {compilerMode === 'taxonomy'
+                    ? 'Classifying bucket, validating nested JSON, and applying one repair pass if needed.'
+                    : 'Resolving categories, equations, and formatter output.'}
+                </p>
               </div>
             ) : formalizedRules.length > 0 ? (
-              <div>
+              <>
                 <div className="results-header-section">
                   <div>
-                    <h3 className="panel-title" style={{ marginBottom: '0.2rem' }}>
-                      Formalized CAD Constraints
-                      <span className="count-badge">{formalizedRules.length} compiled</span>
+                    <h3 className="panel-title inline-title">
+                      {compilerMode === 'taxonomy' ? 'Taxonomy V3 Results' : 'Legacy Results'}
+                      <span className="count-badge">{formalizedRules.length} returned</span>
                     </h3>
-                    <p style={{ fontSize: '0.85rem', color: 'var(--text-muted)' }}>
-                      Strict math equations generated for target assembly checking modules
+                    <p className="muted-copy">
+                      {compilerMode === 'taxonomy'
+                        ? 'Grouped response from the new endpoint with nested final-schema rules.'
+                        : 'Existing formatter response from the legacy endpoint.'}
                     </p>
                   </div>
                   <div className="results-actions">
-                    <button className="btn btn-secondary" onClick={downloadCSV}>
+                    <button className="btn btn-secondary" onClick={exportResults}>
                       <Download size={16} />
-                      Export CSV
+                      Export JSON
+                    </button>
+                    <button className="btn btn-secondary btn-icon-only" title="Copy all results" onClick={() => copyToClipboard(formalizedRules)}>
+                      <Copy size={16} />
                     </button>
                   </div>
                 </div>
 
                 <div className="formalized-grid">
-                  {formalizedRules.map((rule, idx) => {
-                    const status = rule.status ? rule.status.toLowerCase() : '';
-                    let statusClass = 'success';
-                    if (status === 'skipped') statusClass = 'skipped';
-                    else if (status === 'deferred') statusClass = 'deferred';
-                    else if (status.includes('needed') || status.includes('fail')) statusClass = 'error';
-
-                    return (
-                      <div key={idx} className={`formalized-card ${statusClass}`}>
-                        <div className="formalized-row-header">
-                          <span className="rule-category-tag">{rule.rule_category}</span>
-                          <span className={`badge badge-${statusClass}`}>
-                            {rule.status || 'Success'}
-                          </span>
-                        </div>
-                        <div className="formalized-card-body">
-                          <p style={{ fontSize: '0.95rem', fontWeight: '500', marginBottom: '0.75rem', color: 'var(--text-main)' }}>
-                            "{rule.rule_text}"
-                          </p>
-                          {rule.dfm_rule ? (
-                            <div style={{ display: 'flex', flexDirection: 'column', gap: '0.5rem' }}>
-                              <pre className="json-block">
-                                {JSON.stringify(rule.dfm_rule, null, 2)}
-                              </pre>
-                              <div style={{ display: 'flex', gap: '0.5rem', marginTop: '0.25rem' }}>
-                                <button 
-                                  className="btn btn-secondary" 
-                                  style={{ padding: '0.3rem 0.6rem', fontSize: '0.8rem' }}
-                                  onClick={() => copyToClipboard(JSON.stringify(rule.dfm_rule))}
-                                >
-                                  <Copy size={12} />
-                                  Copy JSON
-                                </button>
-                              </div>
-                            </div>
-                          ) : (
-                            <div className="no-logic-tag">
-                              Status: {rule.decision_code || 'Skipped (Non-quantifiable constraint)'}
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                    );
-                  })}
+                  {formalizedRules.map((result, index) =>
+                    compilerMode === 'taxonomy' ? renderTaxonomyOutput(result, index) : renderLegacyOutput(result, index),
+                  )}
                 </div>
-              </div>
+              </>
             ) : (
               <div className="empty-state">
-                <Sparkles size={48} className="empty-state-icon" />
+                <FileJson size={48} className="empty-state-icon" />
                 <div>
-                  <h4 style={{ color: 'var(--text-main)', marginBottom: '0.25rem' }}>No Constraints Compiled</h4>
-                  <p style={{ fontSize: '0.9rem' }}>Fill in rule descriptions on the left and run the compiler to view outputs.</p>
+                  <h4>No compiled output yet</h4>
+                  <p>Run the taxonomy compiler to inspect final-schema JSON.</p>
                 </div>
               </div>
             )}

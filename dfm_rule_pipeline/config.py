@@ -8,6 +8,7 @@ load_dotenv(override=True)
 # LLM Configuration
 LLM_PROVIDER = "groq"
 LLM_MODEL = "openai/gpt-oss-20b"
+LLM_MAX_TOKENS = int(os.getenv("LLM_MAX_TOKENS", "4096"))
 keys_str = os.getenv("GROQ_API_KEYS", "")
 if keys_str:
     GROQ_API_KEY_LIST = [k.strip() for k in keys_str.split(",") if k.strip()]

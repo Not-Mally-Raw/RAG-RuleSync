@@ -32,6 +32,7 @@ from dfm_rule_pipeline.config import EMBEDDING_MODEL
 from dfm_rule_pipeline.schema.feature_schema import features_dict
 from dfm_rule_pipeline.pipeline import is_intrinsic_dimension, normalize_domain_key
 from dfm_rule_pipeline.formatter import process_row
+from dfm_rule_pipeline.taxonomy import TaxonomyFormalizationService
 
 # Stages
 from dfm_rule_pipeline.stages.stage1_intent_extraction import extract_intent
@@ -310,6 +311,19 @@ def process_rules(payload: ProcessRulesRequest):
             })
             
     return results
+
+@app.post("/process-rules-taxonomy")
+def process_rules_taxonomy(payload: ProcessRulesRequest):
+    """
+    Pipeline 3: Taxonomy V3 structural formalization.
+    Accepts rule sentences/resolved rules and returns grouped final-schema taxonomy rules.
+    This endpoint is additive and intentionally leaves the legacy /process-rules path unchanged.
+    """
+    if llm_client is None:
+        raise HTTPException(status_code=503, detail="LLM client is not initialized.")
+
+    service = TaxonomyFormalizationService(llm_client)
+    return service.formalize_rules(payload.rules)
 
 def clean_formatted_response(formatted: dict) -> dict:
     """Utility to clean up double-nested JSON strings in the formatter response."""
