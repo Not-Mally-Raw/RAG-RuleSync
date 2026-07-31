@@ -1,63 +1,46 @@
-# RAG-RuleSync
+# RAG-RuleSync V2
 
-RAG-RuleSync is an end-to-end NLP/LLM pipeline that extracts structured Design-for-Manufacturability (DFM) rules from unstructured PDFs, manuals, and specifications. It extracts rules, assigns logic, and formats them into exact CAD-ready mathematical constraints.
+RAG-RuleSync V2 is an enterprise-grade Design-for-Manufacturability (DFM) rule extraction pipeline. It utilizes layout-aware PDF ingestion, local semantic anchor vector classification, block-level deduplication, context resolution, and round-robin Groq API key rotation to build CAD-ready mathematical constraints from unstructured documents.
 
 ### 📚 Documentation
-For an in-depth, file-by-file breakdown of the system architecture, constraints, and pipelines, please see **[Project_description.md](Project_description.md)**.
+For an architectural deep dive and component breakdown, see **[Project_description.md](Project_description.md)**.
 
 ---
 
-## Quick Start Guide
+## Getting Started
 
 ### 1. Installation
-Install the required packages.
+Install project dependencies:
 ```bash
 pip install -r requirements.txt
 ```
 
 ### 2. Environment Configuration
-Create a `.env` file in the root directory and add your Groq API key.
+Create a `.env` file in the root directory. Add your Groq API key (or multiple keys separated by commas for round-robin rotation):
 ```bash
-GROQ_API_KEY=gsk_your_actual_key_here
+GROQ_API_KEY=gsk_key1,gsk_key2,...
 GROQ_MODEL=meta-llama/llama-4-scout-17b-16e-instruct
 ```
 
 ### 3. Running the System
 
-#### Option 1: Streamlit UI (Recommended)
-Launch the interactive web interface to upload PDFs and visualize the extraction real-time.
+#### Option 1: Streamlit V2 UI
+Run the interactive Streamlit testing and visualization application:
 ```bash
-python -m streamlit run simple_streamlit_app.py
+python -m streamlit run streamlit_v2.py
 ```
-Open your browser to `http://localhost:8503`. Output tables are saved to the `output/` directory as `_FINAL_FORMATTED.csv`.
+Open your browser to the URL displayed in the terminal (usually `http://localhost:8501`).
 
-#### Option 2: Batch Processing Script
-Use the batch script to process an entire folder of PDFs concurrently. Note: Be cautious with strict API rate limits when doing bulk extractions.
+#### Option 2: FastAPI Backend
+Run the backend web service for production API integrations:
 ```bash
-python batch_extract_rules.py --input /path/to/pdfs --output output/compiled_rules
+uvicorn app:app --reload --port 8000
 ```
-
-#### Option 3: Python API
-```python
-import asyncio
-from core.enhanced_rule_engine import EnhancedConfig, EnhancedRuleEngine
-
-config = EnhancedConfig()
-engine = EnhancedRuleEngine(config)
-
-result = asyncio.run(engine.extract_rules_from_text(
-    'Wall thickness must be at least 0.8mm for injection molding.',
-    filename='my_document.pdf'
-))
-
-print(f"Extraction result: {result}")
-```
+API endpoints will be served at `http://localhost:8000`. You can inspect the interactive docs at `http://localhost:8000/docs`.
 
 ---
 
-## Output Format
-Data flows from raw JSON extractions (`output/{pdf_name}.json`) into the final structured schema handled by the DFM refinement pipeline (`output/{pdf_name}_FINAL_FORMATTED.csv`). The CSV contains:
-- `RuleCategory`: E.g., Sheet Metal, Turning, Injection Molding.
-- `Name`: Semantically generated rule name.
-- `Operator` / `ExpName`: The CAD-ready mathematical operators constraints (e.g., `SheetMetal.Thickness >= 0.8`).
-- `RuleText`: Verbatim text.
+## Output Formats
+Extraction outputs flow from raw JSON block chunks into a unified CSV structure:
+- **`phase3_partial_output.json`**: Temporary JSON backup of successfully extracted rules if rate limits are hit.
+- **`phase3_final_rules.csv`**: CAD-normalized mathematical rules containing the category, operators, features, variables, and verbatim source texts.

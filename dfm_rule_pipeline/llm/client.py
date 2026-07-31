@@ -54,7 +54,7 @@ class LLMClient:
             except Exception as e:
                 message = str(e)
                 failures.append(f"Key #{used_idx + 1}: {message}")
-                print(f"    ⚠️ Groq Failed on Key #{used_idx + 1}: {message}")
+                print(f"    [Warning] Groq Failed on Key #{used_idx + 1}: {message}")
 
         joined_failures = " | ".join(failures)
         raise Exception(f"All Groq API keys failed after {len(self.clients)} attempts: {joined_failures}")

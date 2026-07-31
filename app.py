@@ -32,7 +32,12 @@ from dfm_rule_pipeline.config import EMBEDDING_MODEL
 from dfm_rule_pipeline.schema.feature_schema import features_dict
 from dfm_rule_pipeline.pipeline import is_intrinsic_dimension, normalize_domain_key
 from dfm_rule_pipeline.formatter import process_row
-from dfm_rule_pipeline.taxonomy import TaxonomyFormalizationService
+
+# --- Taxonomy V3 Imports ---
+from dfm_rule_pipeline.taxonomy import (
+    TaxonomyFormalizationService,
+    RuleInput as TaxonomyRuleInput
+)
 
 # Stages
 from dfm_rule_pipeline.stages.stage1_intent_extraction import extract_intent
@@ -65,14 +70,16 @@ app.add_middleware(
 embedder = None
 classifier = None
 llm_client = None
+taxonomy_service = None
 
 @app.on_event("startup")
 def startup_event():
-    global embedder, classifier, llm_client
+    global embedder, classifier, llm_client, taxonomy_service
     logger.info("Initializing embedding manager, classifier, and LLM client...")
     embedder = EmbeddingManager(model_name=EMBEDDING_MODEL)
     classifier = DFMAnchorClassifier(embedder, threshold=0.25)
     llm_client = LLMClient()
+    taxonomy_service = TaxonomyFormalizationService(llm_client=llm_client, embedder=embedder)
     logger.info("Initialization complete.")
 
 # --- Models ---
@@ -312,19 +319,6 @@ def process_rules(payload: ProcessRulesRequest):
             
     return results
 
-@app.post("/process-rules-taxonomy")
-def process_rules_taxonomy(payload: ProcessRulesRequest):
-    """
-    Pipeline 3: Taxonomy V3 structural formalization.
-    Accepts rule sentences/resolved rules and returns grouped final-schema taxonomy rules.
-    This endpoint is additive and intentionally leaves the legacy /process-rules path unchanged.
-    """
-    if llm_client is None:
-        raise HTTPException(status_code=503, detail="LLM client is not initialized.")
-
-    service = TaxonomyFormalizationService(llm_client)
-    return service.formalize_rules(payload.rules)
-
 def clean_formatted_response(formatted: dict) -> dict:
     """Utility to clean up double-nested JSON strings in the formatter response."""
     cleaned = dict(formatted)
@@ -346,5 +340,35 @@ def clean_formatted_response(formatted: dict) -> dict:
         "dfm_rule": cleaned.get("dfm_json")
     }
 
+@app.post("/process-rules-taxonomy")
+def process_rules_taxonomy_endpoint(payload: ProcessRulesRequest):
+    """
+    Pipeline V3: DFM Refinement and Taxonomy-based DFM Rule Formalization.
+    Converts manufacturing rules to deeply nested format1 JSON structures
+    aligned with domain schemas. Supports auto-repair loops.
+    """
+    results = []
+    for rule in payload.rules:
+        # Convert app-level RuleInput model to taxonomy package RuleInput model
+        tax_input = TaxonomyRuleInput(
+            rule_text=rule.rule_text,
+            rule_type=rule.rule_type
+        )
+        try:
+            res = taxonomy_service.formalize_rule(tax_input)
+            results.append(res)
+        except Exception as e:
+            logger.error(f"Failed processing rule under taxonomy endpoint: {e}", exc_info=True)
+            results.append({
+                "rule_text": rule.rule_text,
+                "status": "Review Needed",
+                "decision_code": f"endpoint_error({str(e)})",
+                "domain": rule.rule_type or "General",
+                "bucket": "SimpleValidation",
+                "taxonomy_rules": [],
+                "validation_errors": []
+            })
+    return results
+
 if __name__ == "__main__":
-    uvicorn.run(app, host="0.0.0.0", port=8000)
+    uvicorn.run("app:app", host="0.0.0.0", port=8000, reload=True)

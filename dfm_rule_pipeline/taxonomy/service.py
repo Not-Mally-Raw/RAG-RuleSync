@@ -1,212 +1,305 @@
+"""
+Taxonomy V3 Pipeline Service Orchestrator.
+
+Combines bucket classification, dynamic context prompts, LLM extraction,
+deterministic assembly, validation, and targeted repair loops.
+"""
+from __future__ import annotations
+
 import logging
-from typing import Any, Dict, List
+import re
+from typing import List, Optional
 
-from .bucket_registry import classify_bucket
-from .canonicalizer import canonicalize_envelope_payload
-from .domain_normalizer import domain_from_rule_text, is_known_domain, normalize_domain_name
-from .grounding import validate_grounding
-from .llm_formalizer import TaxonomyJSONParseError, TaxonomyLLMFormalizer
-from .models import TaxonomyEnvelope, model_dump_compat
-from .repair import TaxonomyRepairer
-from .schema_factory import normalize_envelope_payload
-from .validator import TaxonomyValidationError, TaxonomyValidator, errors_to_dicts
+from dfm_rule_pipeline.taxonomy.assembler import TaxonomyAssembler
+from dfm_rule_pipeline.taxonomy.bucket_classifier import BucketClassifier
+from dfm_rule_pipeline.taxonomy.llm_extractor import LLMExtractor
+from dfm_rule_pipeline.taxonomy.models import RuleInput, TaxonomyResponse
+from dfm_rule_pipeline.taxonomy.prompt_context import PromptContextBuilder
+from dfm_rule_pipeline.taxonomy.repair import TaxonomyRepair
+from dfm_rule_pipeline.taxonomy.schema_registry import SchemaRegistry
+from dfm_rule_pipeline.taxonomy.validator import TaxonomyValidator
 
-
-def _input_to_dict(value: Any) -> Dict[str, Any]:
-    if isinstance(value, dict):
-        return value
-    if hasattr(value, "model_dump"):
-        return value.model_dump()
-    if hasattr(value, "dict"):
-        return value.dict()
-    return {}
+logger = logging.getLogger("taxonomy.service")
 
 
-def _decision_from_errors(errors: List[TaxonomyValidationError], repaired: bool) -> str:
-    schema_codes = {"schema_root_failed", "schema_attribute_failed"}
-    if any(error.code in schema_codes for error in errors):
-        return "schema_path_failed"
-    if repaired:
-        return "repair_failed"
-    return "validation_failed"
+def _sanitize_rule_text(text: str) -> str:
+    """Sanitize raw rule text (stripping LaTeX math delimiters and replacing unescaped braces)."""
+    if not text:
+        return text
+    clean = re.sub(r"\\\((.*?)\\\)", r"\1", text)
+    clean = re.sub(r"\\\$(.*?)\\\$", r"\1", clean)
+    clean = clean.replace("{", "(").replace("}", ")")
+    return clean.strip()
 
 
-def _force_domain(payload: Dict[str, Any], domain: str) -> Dict[str, Any]:
-    payload["domain"] = domain
-    for rule in payload.get("taxonomy_rules", []):
-        if isinstance(rule, dict):
-            rule["RuleCategory"] = domain
-    return payload
+def _split_into_rule_sentences(text: str) -> List[str]:
+    """
+    Splits multi-sentence paragraphs into semantically grouped rule chunks.
+    
+    Key insight: NOT every sentence is an independent rule. Some sentences are
+    continuations of the previous rule (e.g. "If the material is a superalloy,
+    the ratio limit reduces to 3.0" continues the L/D ratio rule from the
+    previous sentence). These must be MERGED with their parent sentence.
+    
+    Detection heuristics for continuation sentences:
+    - Anaphoric references: "the ratio", "the limit", "the value", "this",
+      "that", "it reduces", "it increases"
+    - No new feature/object introduction (no new Feature.Attribute pattern)
+    - Topic-shift markers indicate a NEW rule: "Additionally", "Furthermore",
+      "Moreover", "Also", "Note that", "Separately"
+    """
+    if not text:
+        return []
+    
+    # --- Phase 1: Split into raw sentences ---
+    # Split on period + space + capital letter
+    raw_sentences = re.split(r'\.(?=\s+[A-Z])', text)
+    raw_sentences = [s.strip().rstrip('.') + '.' for s in raw_sentences if s.strip() and len(s.strip()) > 10]
+    
+    if len(raw_sentences) <= 1:
+        return [text]
+    
+    # --- Phase 2: Detect topic-shift vs continuation ---
+    # Topic-shift markers that signal a NEW independent rule
+    _TOPIC_SHIFT_RE = re.compile(
+        r'(?i)^\s*(Additionally|Furthermore|Moreover|Also|Note\s+that|Separately|In\s+addition|On\s+the\s+other\s+hand)\b'
+    )
+    
+    # Anaphoric / continuation indicators that signal SAME rule continuation
+    _CONTINUATION_RE = re.compile(
+        r'(?i)\b(the\s+ratio|the\s+limit|the\s+value|the\s+tolerance|the\s+threshold|'
+        r'this\s+value|this\s+ratio|this\s+limit|that\s+value|'
+        r'it\s+reduces|it\s+increases|it\s+decreases|it\s+should|it\s+must|'
+        r'the\s+same\s+|otherwise|in\s+that\s+case)\b'
+    )
+    
+    # --- Phase 3: Group sentences ---
+    groups: List[str] = []
+    current_group: List[str] = [raw_sentences[0].rstrip('.')]
+    
+    for sent in raw_sentences[1:]:
+        clean_sent = sent.rstrip('.')
+        
+        has_topic_shift = bool(_TOPIC_SHIFT_RE.search(clean_sent))
+        has_continuation = bool(_CONTINUATION_RE.search(clean_sent))
+        
+        if has_topic_shift and not has_continuation:
+            # This is a NEW independent rule — flush current group
+            groups.append('. '.join(current_group) + '.')
+            # Strip the topic-shift word prefix for cleaner formalization
+            stripped = _TOPIC_SHIFT_RE.sub('', clean_sent).strip().lstrip(',').strip()
+            current_group = [stripped]
+        elif has_continuation and not has_topic_shift:
+            # Continuation of the same rule — merge with current group
+            current_group.append(clean_sent)
+        else:
+            # Ambiguous: default to merging with current group (safer)
+            current_group.append(clean_sent)
+    
+    # Flush final group
+    if current_group:
+        groups.append('. '.join(current_group) + '.')
+    
+    return groups if groups else [text]
 
 
 class TaxonomyFormalizationService:
-    def __init__(self, llm_client: Any):
-        self.formalizer = TaxonomyLLMFormalizer(llm_client)
-        self.repairer = TaxonomyRepairer(llm_client)
-        self.validator = TaxonomyValidator()
+    """
+    Orchestrates the Taxonomy V3 formalization pipeline.
+    """
 
-    def formalize_rules(self, rules: List[Any]) -> List[Dict[str, Any]]:
-        return [self.formalize_rule(rule) for rule in rules]
+    def __init__(
+        self,
+        llm_client,
+        embedder=None,
+        config_path=None,
+    ):
+        self._llm = llm_client
+        self._registry = SchemaRegistry(config_path)
+        
+        # Instantiate sub-components
+        self._classifier = BucketClassifier(self._registry, embedder)
+        self._prompt_builder = PromptContextBuilder(self._registry)
+        self._extractor = LLMExtractor(self._llm)
+        self._assembler = TaxonomyAssembler()
+        self._validator = TaxonomyValidator()
+        self._repairer = TaxonomyRepair(self._llm, self._registry)
 
-    def formalize_rule(self, rule_input: Any) -> Dict[str, Any]:
-        data = _input_to_dict(rule_input)
-        rule_text = str(data.get("rule_text") or "").strip()
-        explicit_domain = data.get("rule_type")
-
+    def formalize_rule(self, rule_input: RuleInput) -> TaxonomyResponse:
+        """
+        Runs the V3 formalization pipeline on a single rule input or paragraph.
+        """
+        rule_text = _sanitize_rule_text(rule_input.rule_text)
         if not rule_text:
-            return self._review_response("", "validation_failed", "", "", [{"code": "model_parse_failed", "message": "Rule text is required.", "location": "$.rule_text", "suggestion": ""}])
+            return TaxonomyResponse(
+                rule_text=rule_text,
+                status="Review Needed",
+                decision_code="skipped_empty",
+                domain="General",
+                bucket="SimpleValidation",
+                taxonomy_rules=[],
+                validation_errors=[],
+            )
 
-        explicit_domain_is_valid = is_known_domain(explicit_domain)
-        domain = normalize_domain_name(explicit_domain) if explicit_domain_is_valid else domain_from_rule_text(rule_text)
-        bucket = classify_bucket(rule_text)
+        # Multi-sentence paragraph pre-segmentation check
+        sentences = _split_into_rule_sentences(rule_text)
+        if len(sentences) > 1:
+            all_rules = []
+            all_errors = []
+            domains = []
+            buckets = []
+            
+            for sent in sentences:
+                sub_input = RuleInput(rule_text=sent, rule_type=rule_input.rule_type)
+                sub_res = self._formalize_single_sentence(sub_input)
+                all_rules.extend(sub_res.taxonomy_rules)
+                all_errors.extend(sub_res.validation_errors)
+                domains.append(sub_res.domain)
+                buckets.append(sub_res.bucket)
+                
+            main_domain = max(set(domains), key=domains.count) if domains else "General"
+            main_bucket = max(set(buckets), key=buckets.count) if buckets else "SimpleValidation"
+            
+            return TaxonomyResponse(
+                rule_text=rule_text,
+                status="Success" if all_rules else "Review Needed",
+                decision_code="formalized" if all_rules else "paragraph_processing_failed",
+                domain=main_domain,
+                bucket=main_bucket,
+                taxonomy_rules=all_rules,
+                validation_errors=all_errors,
+            )
 
+        return self._formalize_single_sentence(rule_input)
+
+    def _formalize_single_sentence(self, rule_input: RuleInput) -> TaxonomyResponse:
+        """Helper to formalize a single un-segmented sentence."""
+        rule_text = _sanitize_rule_text(rule_input.rule_text)
         try:
-            raw_payload = self.formalizer.formalize(rule_text, domain, bucket)
-        except TaxonomyJSONParseError as exc:
-            parse_errors = [
-                {
-                    "code": "json_parse_failed",
-                    "message": str(exc),
-                    "location": "$",
-                    "suggestion": "Return one complete JSON object with domain, bucket, and taxonomy_rules.",
-                }
-            ]
-            try:
-                repaired_payload = self.repairer.recover_json(rule_text, exc.raw_response, parse_errors, domain, bucket)
-            except Exception as repair_exc:
-                repair_errors = parse_errors + [
-                    {
-                        "code": "repair_failed",
-                        "message": str(repair_exc),
-                        "location": "$",
-                        "suggestion": "Review the raw model output and prompt the model for JSON only.",
-                    }
-                ]
-                return self._review_response(rule_text, "repair_failed", domain, bucket, repair_errors)
-
-            prepared_repair = self._prepare_payload(
-                repaired_payload,
-                domain,
-                bucket,
+            # 1. Bucket and Domain Classification (Tier 0)
+            class_res = self._classifier.classify(
                 rule_text,
-                explicit_domain_is_valid,
+                explicit_domain=rule_input.rule_type,
+                llm_client=self._llm,
             )
-            repaired_envelope, repair_errors = self.validator.validate(prepared_repair)
-            if repaired_envelope:
-                repair_errors.extend(validate_grounding(rule_text, prepared_repair))
-            if not repair_errors and repaired_envelope:
-                return self._success_response(rule_text, repaired_envelope)
+            domain = class_res.domain
+            bucket = class_res.bucket
 
-            return self._review_response(
-                rule_text,
-                _decision_from_errors(repair_errors, repaired=True),
-                prepared_repair.get("domain", domain),
-                prepared_repair.get("bucket", bucket),
-                errors_to_dicts(repair_errors),
+            # 2. Build Selective Context Prompt (Tier 1)
+            prompt = self._prompt_builder.build_prompt(rule_text, domain, bucket)
+
+            # 3. LLM Flat Extraction (Tier 2)
+            extraction = self._extractor.extract(prompt)
+            if not extraction:
+                return TaxonomyResponse(
+                    rule_text=rule_text,
+                    status="Review Needed",
+                    decision_code="llm_failed",
+                    domain=domain,
+                    bucket=bucket,
+                    taxonomy_rules=[],
+                    validation_errors=[],
+                )
+
+            # Keep classification decisions aligned
+            extraction.domain = domain
+            extraction.bucket = bucket
+
+            # 4. Deterministic Schema Assembly (Tier 3)
+            rule_ast = self._assembler.assemble(extraction, self._registry)
+
+            # 5. Deterministic Validation (Tier 4)
+            errors = self._validator.validate(rule_ast, domain, self._registry)
+
+            # Check if any new attributes were auto-registered
+            has_new_attr = any(e.code == "new_attribute_registered" for e in errors)
+            fatal_errors = [e for e in errors if e.code != "new_attribute_registered"]
+
+            if has_new_attr and not fatal_errors:
+                return TaxonomyResponse(
+                    rule_text=rule_text,
+                    status="Review Needed",
+                    decision_code="new_attribute_registered",
+                    domain=domain,
+                    bucket=bucket,
+                    taxonomy_rules=[rule_ast],
+                    validation_errors=errors,
+                )
+
+            # 6. Targeted Repair Loop (Tier 5) - triggers if errors found
+            if errors:
+                repaired_extraction = self._repairer.repair(
+                    rule_text, extraction, errors, domain
+                )
+                if repaired_extraction:
+                    repaired_extraction.domain = domain
+                    repaired_extraction.bucket = bucket
+                    
+                    # Re-assemble & Re-validate
+                    repaired_ast = self._assembler.assemble(repaired_extraction, self._registry)
+                    repaired_errors = self._validator.validate(
+                        repaired_ast, domain, self._registry
+                    )
+                    
+                    if not repaired_errors:
+                        # Repair succeeded!
+                        return TaxonomyResponse(
+                            rule_text=rule_text,
+                            status="Success",
+                            decision_code="formalized",
+                            domain=domain,
+                            bucket=bucket,
+                            taxonomy_rules=[repaired_ast],
+                            validation_errors=[],
+                        )
+                    else:
+                        # Repair failed to clear all errors
+                        return TaxonomyResponse(
+                            rule_text=rule_text,
+                            status="Review Needed",
+                            decision_code="repair_failed",
+                            domain=domain,
+                            bucket=bucket,
+                            taxonomy_rules=[repaired_ast],
+                            validation_errors=repaired_errors,
+                        )
+                else:
+                    # Repair request failed or was skipped
+                    return TaxonomyResponse(
+                        rule_text=rule_text,
+                        status="Review Needed",
+                        decision_code="validation_failed",
+                        domain=domain,
+                        bucket=bucket,
+                        taxonomy_rules=[rule_ast],
+                        validation_errors=errors,
+                    )
+
+            # Happy path: validated successfully on first try
+            return TaxonomyResponse(
+                rule_text=rule_text,
+                status="Success",
+                decision_code="formalized",
+                domain=domain,
+                bucket=bucket,
+                taxonomy_rules=[rule_ast],
+                validation_errors=[],
             )
-        except (ConnectionError, TimeoutError, OSError) as exc:
-            logging.getLogger(__name__).error("LLM call failed for rule: %s", rule_text, exc_info=True)
-            return self._review_response(
-                rule_text,
-                "llm_failed",
-                domain,
-                bucket,
-                [{"code": "llm_failed", "message": str(exc), "location": "$", "suggestion": "Check LLM availability and network connectivity."}],
-            )
-        except Exception as exc:
-            logging.getLogger(__name__).error("Unexpected error formalizing rule: %s", rule_text, exc_info=True)
-            return self._review_response(
-                rule_text,
-                "internal_error",
-                domain,
-                bucket,
-                [{"code": "internal_error", "message": str(exc), "location": "$", "suggestion": "This is an internal pipeline error. Check server logs for the full stack trace."}],
+
+        except Exception as e:
+            logger.error(f"Error processing rule taxonomy formalization: {e}", exc_info=True)
+            return TaxonomyResponse(
+                rule_text=rule_text,
+                status="Review Needed",
+                decision_code=f"pipeline_error({str(e)})",
+                domain="General",
+                bucket="SimpleValidation",
+                taxonomy_rules=[],
+                validation_errors=[],
             )
 
-        prepared_payload = self._prepare_payload(
-            raw_payload,
-            domain,
-            bucket,
-            rule_text,
-            explicit_domain_is_valid,
-        )
-        envelope, errors = self.validator.validate(prepared_payload)
-        if envelope:
-            errors.extend(validate_grounding(rule_text, prepared_payload))
-        if not errors and envelope:
-            return self._success_response(rule_text, envelope)
-
-        error_dicts = errors_to_dicts(errors)
-        try:
-            repaired_payload = self.repairer.repair(rule_text, prepared_payload, error_dicts, domain, bucket)
-        except Exception as exc:
-            repair_errors = error_dicts + [
-                {"code": "repair_failed", "message": str(exc), "location": "$", "suggestion": "Review the generated taxonomy JSON manually."}
-            ]
-            return self._review_response(rule_text, _decision_from_errors(errors, repaired=True), domain, bucket, repair_errors)
-
-        prepared_repair = self._prepare_payload(
-            repaired_payload,
-            domain,
-            bucket,
-            rule_text,
-            explicit_domain_is_valid,
-        )
-        repaired_envelope, repair_errors = self.validator.validate(prepared_repair)
-        if repaired_envelope:
-            repair_errors.extend(validate_grounding(rule_text, prepared_repair))
-        if not repair_errors and repaired_envelope:
-            return self._success_response(rule_text, repaired_envelope)
-
-        return self._review_response(
-            rule_text,
-            _decision_from_errors(repair_errors, repaired=True),
-            prepared_repair.get("domain", domain),
-            prepared_repair.get("bucket", bucket),
-            errors_to_dicts(repair_errors),
-        )
-
-    def _success_response(self, rule_text: str, envelope: TaxonomyEnvelope) -> Dict[str, Any]:
-        return {
-            "rule_text": rule_text,
-            "status": "Success",
-            "decision_code": "formalized",
-            "domain": envelope.domain,
-            "bucket": envelope.bucket,
-            "taxonomy_rules": [model_dump_compat(rule) for rule in envelope.taxonomy_rules],
-            "validation_errors": [],
-        }
-
-    def _prepare_payload(
-        self,
-        payload: Any,
-        domain: str,
-        bucket: str,
-        rule_text: str,
-        explicit_domain_is_valid: bool,
-    ) -> Dict[str, Any]:
-        prepared = normalize_envelope_payload(payload, fallback_domain=domain, fallback_bucket=bucket)
-        if explicit_domain_is_valid:
-            prepared = _force_domain(prepared, domain)
-        prepared = canonicalize_envelope_payload(prepared, rule_text)
-        if explicit_domain_is_valid:
-            prepared = _force_domain(prepared, domain)
-        return prepared
-
-    def _review_response(
-        self,
-        rule_text: str,
-        decision_code: str,
-        domain: str,
-        bucket: str,
-        errors: List[Dict[str, Any]],
-    ) -> Dict[str, Any]:
-        return {
-            "rule_text": rule_text,
-            "status": "Review Needed",
-            "decision_code": decision_code,
-            "domain": domain,
-            "bucket": bucket,
-            "taxonomy_rules": [],
-            "validation_errors": errors,
-        }
+    def process_rules(self, rules: List[RuleInput]) -> List[TaxonomyResponse]:
+        """
+        Runs the V3 formalization pipeline on a batch of rules.
+        """
+        return [self.formalize_rule(rule) for rule in rules]

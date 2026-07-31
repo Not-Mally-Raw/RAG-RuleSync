@@ -20,20 +20,17 @@ venv/
 env/
 ENV/
 
-# OS artifacts
+# OS & IDE artifacts
 .DS_Store
 Thumbs.db
 *.swp
 *.swo
 *~
-
-# IDE artifacts
 .vscode/
 .idea/
 *.sublime-*
-
-# Notebooks checkpoints
 .ipynb_checkpoints/
+.gemini/
 
 # Logs and cache
 *.log
@@ -43,13 +40,28 @@ logs/
 .coverage
 htmlcov/
 
-# Local outputs and generated data (do not commit)
+# Local database files
+*.db
+*.sqlite
+*.sqlite3
+test_truth_store.db
+
+# Frontend build & dependencies
+frontend/node_modules/
+frontend/dist/
+
+# Temporary data dumps & ground-truth spreadsheets (do not commit)
+ans.json
+phase3_final_rules.csv
+phase3_partial_output.json
+Ground-truth.csv
+Ground-truth.xlsx
 output/
 dfm_rule_pipeline/output/
+dfm_rule_pipeline/tests/*.json
+dfm_rule_pipeline/tests/*.xlsx
 data/
 *.pid
-
-# Temporary files
 *.tmp
 *.temp
 tmp/
@@ -57,5 +69,3 @@ temp/
 
 # Streamlit cache
 .streamlit/
-
-*.db

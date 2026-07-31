@@ -1,104 +1,194 @@
-from typing import Any, Dict, List, Optional
+from __future__ import annotations
 
 from pydantic import BaseModel, Field
 
-try:
-    from pydantic import ConfigDict
-except ImportError:  # pragma: no cover - pydantic v1 compatibility
-    ConfigDict = None
+
+# -----------------------------------------------------------------------------
+# 1. Intermediate Format Models (flat, what LLM returns)
+# -----------------------------------------------------------------------------
+
+class FlatValidation(BaseModel):
+    """
+    Represents a flat validation rule.
+    """
+    exp_name: str = ""  # e.g. "Pocket.SideFaceAngle"
+    operators: list[str] = Field(default_factory=list)  # e.g. [">="] or [">", "<"] for range
+    values: list[str] = Field(default_factory=list)  # e.g. ["13.0"] or ["0.5", "1.2"] for range
 
 
-class StrictModel(BaseModel):
-    if ConfigDict is not None:
-        model_config = ConfigDict(extra="forbid")
-    else:  # pragma: no cover - pydantic v1 compatibility
-        class Config:
-            extra = "forbid"
+class FlatCondition(BaseModel):
+    """
+    Represents a flat condition rule.
+    """
+    exp_name: str = ""  # e.g. "Hole.IsBlind"
+    operators: list[str] = Field(default_factory=list)  # e.g. ["="]
+    branches: list[list[str]] = Field(default_factory=list)  # e.g. [["Yes"], ["No"]] — one inner list per branch
 
 
-class FilterParam(StrictModel):
+class FlatFilter(BaseModel):
+    """
+    Represents a flat filter rule.
+    """
+    exp_name: str = ""  # e.g. "Fastener.FirstEngagedComp.Material"
+    operator: str = ""  # e.g. "="
+    value: str = ""  # e.g. "Steel"
+
+
+class ExtractionResult(BaseModel):
+    """
+    Represents the intermediate extraction result from the LLM.
+    """
+    domain: str = "General"
+    bucket: str = "SimpleValidation"
+    name: str = "Unnamed Rule"
+    rule_type: str = "Feature"  # "Feature" or "Module"
+    feature1: str = ""
+    feature2: str = ""
+    object1: str = ""
+    object2: str = ""
+    validations: list[FlatValidation] = Field(default_factory=list)
+    conditions: list[FlatCondition] = Field(default_factory=list)
+    filters: list[FlatFilter] = Field(default_factory=list)
+    additional: list[str] = Field(default_factory=list)  # list of ExpName strings
+    allowed_params: list[str] = Field(default_factory=list)  # list of schema path strings
+
+
+# -----------------------------------------------------------------------------
+# 2. Final Taxonomy Schema Models (deeply nested output)
+# -----------------------------------------------------------------------------
+
+class FilterParam(BaseModel):
+    """
+    Taxonomy filter parameter.
+    """
     ExpName: str = ""
-    Operator: List[str] = Field(default_factory=lambda: [""])
-    Value: List[str] = Field(default_factory=lambda: [""])
+    Operator: list[str] = Field(default_factory=lambda: [""])
+    Value: list[str] = Field(default_factory=lambda: [""])
+
+    @classmethod
+    def placeholder(cls) -> FilterParam:
+        return cls()
 
 
-class ConditionParam(StrictModel):
+class ConditionParam(BaseModel):
+    """
+    Taxonomy condition parameter.
+    """
     ExpName: str = ""
-    Operator: List[List[str]] = Field(default_factory=lambda: [[""]])
-    Value: List[List[List[str]]] = Field(default_factory=lambda: [[[""]]])
+    Operator: list[list[str]] = Field(default_factory=lambda: [[""]])
+    Value: list[list[list[str]]] = Field(default_factory=lambda: [[[""]]])
+
+    @classmethod
+    def placeholder(cls) -> ConditionParam:
+        return cls()
 
 
-class ValidationParam(StrictModel):
+class ValidationParam(BaseModel):
+    """
+    Taxonomy validation parameter.
+    """
     ExpName: str = ""
-    Operator: List[List[str]] = Field(default_factory=lambda: [[""]])
-    Value: List[List[List[str]]] = Field(default_factory=lambda: [[[""]]])
-    AllowedParams: List[str] = Field(default_factory=lambda: [""])
+    Operator: list[list[str]] = Field(default_factory=lambda: [[""]])
+    Value: list[list[list[str]]] = Field(default_factory=lambda: [[[""]]])
+    AllowedParams: list[str] = Field(default_factory=lambda: [""])
+
+    @classmethod
+    def placeholder(cls) -> ValidationParam:
+        return cls()
 
 
-class AdditionalParam(StrictModel):
+class AdditionalParam(BaseModel):
+    """
+    Taxonomy additional parameter.
+    """
     ExpName: str = ""
 
+    @classmethod
+    def placeholder(cls) -> AdditionalParam:
+        return cls()
 
-class UserParam(StrictModel):
+
+class UserParam(BaseModel):
+    """
+    Taxonomy user parameter.
+    """
     ParamName: str = ""
     DisplayName: str = ""
-    Value: List[str] = Field(default_factory=lambda: [""])
+    Value: list[str] = Field(default_factory=lambda: [""])
     MinValue: str = ""
     MaxValue: str = ""
 
-
-class ConstraintSet(StrictModel):
-    FilterParamList: List[FilterParam] = Field(default_factory=lambda: [FilterParam()])
-    ConditionParamList: List[ConditionParam] = Field(default_factory=lambda: [ConditionParam()])
-    ValidationParamList: List[ValidationParam] = Field(default_factory=lambda: [ValidationParam()])
-    AdditionalParamList: List[AdditionalParam] = Field(default_factory=lambda: [AdditionalParam()])
-    UserParamList: List[UserParam] = Field(default_factory=lambda: [UserParam()])
+    @classmethod
+    def placeholder(cls) -> UserParam:
+        return cls()
 
 
-class TaxonomyRule(StrictModel):
-    Name: str = ""
-    RuleCategory: str = ""
+class Constraints(BaseModel):
+    """
+    Taxonomy constraints encapsulating parameters.
+    """
+    FilterParamList: list[FilterParam]
+    ConditionParamList: list[ConditionParam]
+    ValidationParamList: list[ValidationParam]
+    AdditionalParamList: list[AdditionalParam]
+    UserParamList: list[UserParam]
+
+    @classmethod
+    def empty(cls) -> Constraints:
+        return cls(
+            FilterParamList=[FilterParam.placeholder()],
+            ConditionParamList=[ConditionParam.placeholder()],
+            ValidationParamList=[ValidationParam.placeholder()],
+            AdditionalParamList=[AdditionalParam.placeholder()],
+            UserParamList=[UserParam.placeholder()]
+        )
+
+
+class TaxonomyRule(BaseModel):
+    """
+    Taxonomy rule matching the format1 JSON schema.
+    """
+    Name: str
+    RuleCategory: str
     Results: str = "Validation"
-    RuleType: str = "Feature"
+    RuleType: str  # "Feature" or "Module"
     Feature1: str = ""
     Feature2: str = ""
     Object1: str = ""
     Object2: str = ""
-    Constraints: ConstraintSet = Field(default_factory=ConstraintSet)
+    Constraints: Constraints
 
 
-class TaxonomyEnvelope(StrictModel):
-    domain: str = ""
-    bucket: str = ""
-    taxonomy_rules: List[TaxonomyRule] = Field(default_factory=list)
+# -----------------------------------------------------------------------------
+# 3. API Response Models
+# -----------------------------------------------------------------------------
 
-
-class TaxonomyValidationError(StrictModel):
-    code: str
+class ValidationErrorDetail(BaseModel):
+    """
+    Details about a validation error.
+    """
+    code: str  # error code like "schema_root_failed"
     message: str
-    location: str
+    location: str  # JSON path like "taxonomy_rules[0].Constraints.ValidationParamList[0].ExpName"
     suggestion: str = ""
 
 
-class TaxonomyResponseItem(StrictModel):
+class RuleInput(BaseModel):
+    """
+    Input model for a rule.
+    """
     rule_text: str
-    status: str
-    decision_code: str
-    domain: str = ""
-    bucket: str = ""
-    taxonomy_rules: List[Dict[str, Any]] = Field(default_factory=list)
-    validation_errors: List[Dict[str, Any]] = Field(default_factory=list)
+    rule_type: str | None = None  # optional domain override
 
 
-def model_dump_compat(model: Any) -> Dict[str, Any]:
-    """Return a dict for either pydantic v1 or v2 models."""
-    if hasattr(model, "model_dump"):
-        return model.model_dump()
-    return model.dict()
-
-
-def model_validate_compat(model_cls: Any, payload: Any) -> Any:
-    """Validate data for either pydantic v1 or v2 models."""
-    if hasattr(model_cls, "model_validate"):
-        return model_cls.model_validate(payload)
-    return model_cls.parse_obj(payload)
+class TaxonomyResponse(BaseModel):
+    """
+    Response model for the taxonomy API.
+    """
+    rule_text: str
+    status: str  # "Success" or "Review Needed"
+    decision_code: str  # "formalized", "validation_failed", "llm_failed", "repair_failed", etc.
+    domain: str
+    bucket: str
+    taxonomy_rules: list[TaxonomyRule]
+    validation_errors: list[ValidationErrorDetail]

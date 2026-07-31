@@ -24,17 +24,11 @@ http://127.0.0.1:5173/
 
 The frontend checks backend health at `http://localhost:8000/`.
 
-## Taxonomy V3
+## Rule Compiler
 
-Use the **Rule Compiler** tab, select **Taxonomy V3**, enter one rule per line, optionally choose a domain override, and run the compiler.
+Use the **Rule Compiler** tab, enter one rule per line, optionally choose a domain override, and run the compiler.
 
-The Taxonomy V3 mode calls:
-
-```text
-POST /process-rules-taxonomy
-```
-
-Legacy mode is still available and calls:
+The compiler calls:
 
 ```text
 POST /process-rules

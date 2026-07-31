@@ -33,7 +33,7 @@ const DOMAIN_OPTIONS = [
   { label: 'General', value: 'General' },
 ];
 
-const SAMPLE_TAXONOMY_RULES = [
+const SAMPLE_RULES = [
   'Distance between bridges should be at least 4.5 times sheet thickness',
   'If a hole is blind, total depth to diameter ratio is 2.0; otherwise it is 4.0',
   'Material must be one of Steel, Aluminium, or Brass',
@@ -66,7 +66,6 @@ function getStatusClass(status = '') {
 
 function App() {
   const [activeTab, setActiveTab] = useState('formalize');
-  const [compilerMode, setCompilerMode] = useState('taxonomy');
   const [serverStatus, setServerStatus] = useState('checking');
   const [theme, setTheme] = useState(() => localStorage.getItem('theme') || 'light');
 
@@ -77,8 +76,9 @@ function App() {
   const [selectedRules, setSelectedRules] = useState(new Set());
   const fileInputRef = useRef(null);
 
-  const [ruleInput, setRuleInput] = useState(SAMPLE_TAXONOMY_RULES[0]);
+  const [ruleInput, setRuleInput] = useState(SAMPLE_RULES[0]);
   const [domainOverride, setDomainOverride] = useState('');
+  const [formalizerMode, setFormalizerMode] = useState('taxonomy'); // 'taxonomy' or 'legacy'
   const [processing, setProcessing] = useState(false);
   const [formalizedRules, setFormalizedRules] = useState([]);
   const [requestError, setRequestError] = useState('');
@@ -187,7 +187,6 @@ function App() {
 
     if (lines.length === 0) return;
     setRulesFromLines(lines);
-    setCompilerMode('taxonomy');
     setActiveTab('formalize');
   };
 
@@ -212,7 +211,7 @@ function App() {
       return;
     }
 
-    const endpoint = compilerMode === 'taxonomy' ? '/process-rules-taxonomy' : '/process-rules';
+    const endpoint = formalizerMode === 'taxonomy' ? '/process-rules-taxonomy' : '/process-rules';
 
     setProcessing(true);
     setFormalizedRules([]);
@@ -244,77 +243,8 @@ function App() {
 
   const exportResults = () => {
     if (formalizedRules.length === 0) return;
-    const name = compilerMode === 'taxonomy' ? 'taxonomy_v3_results.json' : 'legacy_formalization_results.json';
+    const name = formalizerMode === 'taxonomy' ? 'taxonomy_formalization_results.json' : 'legacy_formalization_results.json';
     downloadBlob(name, toJsonText(formalizedRules), 'application/json;charset=utf-8');
-  };
-
-  const renderTaxonomyOutput = (result, index) => {
-    const statusClass = getStatusClass(result.status);
-    const rules = result.taxonomy_rules || [];
-    const errors = result.validation_errors || [];
-
-    return (
-      <div key={`${result.rule_text}-${index}`} className={`formalized-card ${statusClass}`}>
-        <div className="formalized-row-header">
-          <div className="taxonomy-title-group">
-            <span className="rule-category-tag">{result.domain || 'Unknown domain'}</span>
-            <h4>{result.bucket || 'Unclassified bucket'}</h4>
-          </div>
-          <span className={`badge badge-${statusClass}`}>{result.status}</span>
-        </div>
-
-        <p className="rule-preview">"{result.rule_text}"</p>
-
-        <div className="metadata-grid">
-          <div>
-            <span>Decision</span>
-            <strong>{result.decision_code || '-'}</strong>
-          </div>
-          <div>
-            <span>Rules</span>
-            <strong>{rules.length}</strong>
-          </div>
-          <div>
-            <span>Validation Errors</span>
-            <strong>{errors.length}</strong>
-          </div>
-        </div>
-
-        {errors.length > 0 && (
-          <div className="error-list">
-            {errors.map((error, errorIndex) => (
-              <div key={`${error.code}-${errorIndex}`} className="error-item">
-                <AlertTriangle size={15} />
-                <div>
-                  <strong>{error.code}</strong>
-                  <p>{error.message}</p>
-                  {error.suggestion && <small>{error.suggestion}</small>}
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-
-        {rules.length > 0 ? (
-          <div className="taxonomy-rules-stack">
-            {rules.map((taxonomyRule, ruleIndex) => (
-              <div key={`${taxonomyRule.Name}-${ruleIndex}`} className="taxonomy-rule-block">
-                <div className="taxonomy-rule-header">
-                  <span>{taxonomyRule.Name || `Taxonomy Rule ${ruleIndex + 1}`}</span>
-                  <button className="btn btn-secondary compact-btn" onClick={() => copyToClipboard(taxonomyRule)}>
-                    <Copy size={13} />
-                    Copy
-                  </button>
-                </div>
-                <pre className="json-block">{toJsonText(taxonomyRule)}</pre>
-              </div>
-            ))}
-          </div>
-        ) : (
-          <div className="no-logic-tag">No validated taxonomy rule was returned.</div>
-        )}
-      </div>
-    );
   };
 
   const renderLegacyOutput = (result, index) => {
@@ -330,13 +260,72 @@ function App() {
         {result.dfm_rule ? (
           <>
             <pre className="json-block">{toJsonText(result.dfm_rule)}</pre>
-            <button className="btn btn-secondary compact-btn" onClick={() => copyToClipboard(result.dfm_rule)}>
+            <button className="btn btn-secondary compact-btn" onClick={() => copyToClipboard(result.dfm_rule)} style={{ marginTop: '0.75rem' }}>
               <Copy size={13} />
               Copy JSON
             </button>
           </>
         ) : (
           <div className="no-logic-tag">Status: {result.decision_code || 'No structured rule returned'}</div>
+        )}
+      </div>
+    );
+  };
+
+  const renderTaxonomyOutput = (result, index) => {
+    const statusClass = getStatusClass(result.status);
+
+    return (
+      <div key={`${result.rule_text}-${index}`} className={`formalized-card ${statusClass}`}>
+        <div className="formalized-row-header">
+          <span className="rule-category-tag">{result.domain || 'Auto detected'}</span>
+          <span className={`badge badge-${statusClass}`}>{result.status || 'Success'}</span>
+        </div>
+        
+        <p className="rule-preview">"{result.rule_text}"</p>
+
+        <div className="metadata-grid">
+          <div>
+            <span>Bucket</span>
+            <strong>{result.bucket || 'N/A'}</strong>
+          </div>
+          <div>
+            <span>Domain</span>
+            <strong>{result.domain || 'N/A'}</strong>
+          </div>
+          <div>
+            <span>Decision Code</span>
+            <strong>{result.decision_code || 'N/A'}</strong>
+          </div>
+        </div>
+
+        {result.validation_errors && result.validation_errors.length > 0 && (
+          <div className="error-list">
+            {result.validation_errors.map((error, errIdx) => (
+              <div key={`err-${errIdx}`} className="error-item">
+                <AlertTriangle size={18} style={{ marginTop: '0.1rem' }} />
+                <div>
+                  <strong style={{ fontSize: '0.85rem' }}>[{error.code}]</strong>
+                  <p>{error.message}</p>
+                  {error.suggestion && <small>Suggestion: {error.suggestion}</small>}
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+
+        {result.taxonomy_rules && result.taxonomy_rules.length > 0 ? (
+          <>
+            <pre className="json-block">{toJsonText(result.taxonomy_rules)}</pre>
+            <button className="btn btn-secondary compact-btn" onClick={() => copyToClipboard(result.taxonomy_rules)} style={{ marginTop: '0.75rem' }}>
+              <Copy size={13} />
+              Copy JSON
+            </button>
+          </>
+        ) : (
+          <div className="no-logic-tag" style={{ color: 'var(--color-danger)' }}>
+            Pipeline status: {result.decision_code || 'Compilation failed'}
+          </div>
         )}
       </div>
     );
@@ -349,7 +338,7 @@ function App() {
           <Cpu className="brand-logo" size={32} />
           <div>
             <h1 className="brand-title">RAG-RuleSync</h1>
-            <p className="brand-subtitle">DFM Taxonomy Compiler</p>
+            <p className="brand-subtitle">DFM Rule Compiler</p>
           </div>
         </div>
 
@@ -464,7 +453,7 @@ function App() {
                       Extracted Candidate Rules
                       <span className="count-badge">{extractedRules.length} found</span>
                     </h3>
-                    <p className="muted-copy">Selected rules can be sent directly to the taxonomy compiler.</p>
+                    <p className="muted-copy">Selected rules can be sent directly to the rule compiler.</p>
                   </div>
                   <div className="results-actions">
                     <button className="btn btn-secondary btn-icon-only" title="Toggle select all" onClick={toggleSelectAll}>
@@ -526,27 +515,19 @@ function App() {
               Rule Input
             </h3>
 
-            <label className="field-label">Compiler</label>
-            <div className="segmented-control" aria-label="Compiler mode">
+            <label className="field-label">Formalizer Mode</label>
+            <div className="segmented-control">
               <button
-                className={`segment-btn ${compilerMode === 'taxonomy' ? 'active' : ''}`}
-                onClick={() => {
-                  setCompilerMode('taxonomy');
-                  setFormalizedRules([]);
-                }}
+                className={`segment-btn ${formalizerMode === 'taxonomy' ? 'active' : ''}`}
+                onClick={() => setFormalizerMode('taxonomy')}
               >
-                <FileJson size={16} />
                 Taxonomy V3
               </button>
               <button
-                className={`segment-btn ${compilerMode === 'legacy' ? 'active' : ''}`}
-                onClick={() => {
-                  setCompilerMode('legacy');
-                  setFormalizedRules([]);
-                }}
+                className={`segment-btn ${formalizerMode === 'legacy' ? 'active' : ''}`}
+                onClick={() => setFormalizerMode('legacy')}
               >
-                <Sparkles size={16} />
-                Legacy
+                Legacy DFM
               </button>
             </div>
 
@@ -578,7 +559,7 @@ function App() {
             />
 
             <div className="button-row">
-              <button className="btn btn-secondary" onClick={() => setRulesFromLines(SAMPLE_TAXONOMY_RULES)}>
+              <button className="btn btn-secondary" onClick={() => setRulesFromLines(SAMPLE_RULES)}>
                 Load Samples
               </button>
               <button className="btn btn-secondary" onClick={() => setRulesFromLines([])} disabled={!ruleInput.trim()}>
@@ -599,13 +580,13 @@ function App() {
               ) : (
                 <>
                   <Sparkles size={16} />
-                  {compilerMode === 'taxonomy' ? 'Run Taxonomy V3' : 'Run Legacy Formalizer'}
+                  Run Formalizer
                 </>
               )}
             </button>
 
             <p className="api-note">
-              {compilerMode === 'taxonomy' ? 'Calls POST /process-rules-taxonomy' : 'Calls POST /process-rules'}
+              Calls POST {formalizerMode === 'taxonomy' ? '/process-rules-taxonomy' : '/process-rules'}
             </p>
           </div>
 
@@ -613,12 +594,10 @@ function App() {
             {processing ? (
               <div className="processing-overlay">
                 <div className="spinner large-spinner" />
-                <p className="processing-text">
-                  {compilerMode === 'taxonomy' ? 'Building taxonomy schema' : 'Running legacy formalization'}
-                </p>
+                <p className="processing-text">Running formalization</p>
                 <p className="processing-sub">
-                  {compilerMode === 'taxonomy'
-                    ? 'Classifying bucket, validating nested JSON, and applying one repair pass if needed.'
+                  {formalizerMode === 'taxonomy'
+                    ? 'Classifying, extracting flat JSON, assembling nested arrays, and validating.'
                     : 'Resolving categories, equations, and formatter output.'}
                 </p>
               </div>
@@ -627,13 +606,11 @@ function App() {
                 <div className="results-header-section">
                   <div>
                     <h3 className="panel-title inline-title">
-                      {compilerMode === 'taxonomy' ? 'Taxonomy V3 Results' : 'Legacy Results'}
+                      Formalizer Results
                       <span className="count-badge">{formalizedRules.length} returned</span>
                     </h3>
                     <p className="muted-copy">
-                      {compilerMode === 'taxonomy'
-                        ? 'Grouped response from the new endpoint with nested final-schema rules.'
-                        : 'Existing formatter response from the legacy endpoint.'}
+                      {formalizerMode === 'taxonomy' ? 'Taxonomy formalizer V3 response.' : 'Legacy formalizer response.'}
                     </p>
                   </div>
                   <div className="results-actions">
@@ -649,7 +626,9 @@ function App() {
 
                 <div className="formalized-grid">
                   {formalizedRules.map((result, index) =>
-                    compilerMode === 'taxonomy' ? renderTaxonomyOutput(result, index) : renderLegacyOutput(result, index),
+                    formalizerMode === 'taxonomy'
+                      ? renderTaxonomyOutput(result, index)
+                      : renderLegacyOutput(result, index)
                   )}
                 </div>
               </>
@@ -658,7 +637,7 @@ function App() {
                 <FileJson size={48} className="empty-state-icon" />
                 <div>
                   <h4>No compiled output yet</h4>
-                  <p>Run the taxonomy compiler to inspect final-schema JSON.</p>
+                  <p>Run the compiler to inspect formatted rule JSON.</p>
                 </div>
               </div>
             )}

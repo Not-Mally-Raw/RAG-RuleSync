@@ -834,19 +834,6 @@ h1, h2, h3, h4 {
   color: var(--color-secondary);
 }
 
-.taxonomy-title-group {
-  display: flex;
-  flex-direction: column;
-  gap: 0.2rem;
-  min-width: 0;
-}
-
-.taxonomy-title-group h4 {
-  color: var(--text-main);
-  font-size: 1rem;
-  overflow-wrap: anywhere;
-}
-
 .formalized-card-body {
   margin-bottom: 1rem;
 }
@@ -1063,30 +1050,6 @@ h1, h2, h3, h4 {
   overflow-wrap: anywhere;
 }
 
-.taxonomy-rules-stack {
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-}
-
-.taxonomy-rule-block {
-  border: 1px solid var(--border-card);
-  border-radius: var(--border-radius-md);
-  background: var(--bg-input);
-  padding: 0.75rem;
-}
-
-.taxonomy-rule-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 0.75rem;
-  margin-bottom: 0.65rem;
-  color: var(--text-main);
-  font-family: var(--font-title);
-  font-weight: 700;
-}
-
 .compact-btn {
   padding: 0.4rem 0.65rem;
   font-size: 0.8rem;
@@ -1131,8 +1094,7 @@ h1, h2, h3, h4 {
   }
 
   .results-header-section,
-  .formalized-row-header,
-  .taxonomy-rule-header {
+  .formalized-row-header {
     align-items: flex-start;
     flex-direction: column;
   }

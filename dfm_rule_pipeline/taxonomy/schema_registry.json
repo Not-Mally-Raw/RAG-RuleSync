@@ -1,0 +1,972 @@
+{
+  "domains": {
+    "SheetMetal": {
+      "canonical_name": "SheetMetal",
+      "aliases": [
+        "Sheet Metal",
+        "Sheetmetal",
+        "sheetmetal",
+        "sm",
+        "sheet metal"
+      ],
+      "features_key": "Sheetmetal",
+      "features": {
+        "Bend": [
+          "MinRadius",
+          "MaxRadius",
+          "Angle",
+          "IsNullRadius",
+          "IsConical",
+          "Radius"
+        ],
+        "BendRelief": [
+          "Depth",
+          "Width"
+        ],
+        "Hem": [
+          "Radius",
+          "Angle",
+          "Length",
+          "SurfaceProfileTolerance",
+          "HemOpening"
+        ],
+        "OpenHem": [
+          "Radius",
+          "Length"
+        ],
+        "ClosedHem": [
+          "Length",
+          "Height"
+        ],
+        "RolledHem": [
+          "Radius",
+          "HemOpening"
+        ],
+        "TearDropHem": [
+          "Radius",
+          "Length",
+          "HemOpening",
+          "Diameter",
+          "Height"
+        ],
+        "Stamp": [
+          "Height",
+          "TaperAngle",
+          "PunchInnerRadius",
+          "PunchOuterRadius",
+          "DieInnerRadius",
+          "DieOuterRadius"
+        ],
+        "Dowel": [
+          "OuterRadius",
+          "OuterDiameter",
+          "OuterDiameterHeight"
+        ],
+        "Dimple": [
+          "DieInnerRadius",
+          "PunchOuterRadius",
+          "Height",
+          "Radius",
+          "Depth"
+        ],
+        "Bridge": [
+          "Length",
+          "Width"
+        ],
+        "ExtrudedHole": [
+          "InnerRadius",
+          "InnerDiameter",
+          "OuterRadius",
+          "OuterDiameter"
+        ],
+        "CardGuide": [
+          "Length",
+          "OpeningAngle"
+        ],
+        "Cutout": [
+          "IsInternal",
+          "IsInternalWithSingleFace",
+          "IsPlaner"
+        ],
+        "SimpleCutout": [
+          "IsInternal",
+          "IsInternalWithSingleFace",
+          "IsPlaner"
+        ],
+        "Flange": [
+          "Radius",
+          "Angle",
+          "Length",
+          "Height"
+        ],
+        "EdgeFlange": [
+          "Radius",
+          "Angle",
+          "Length"
+        ],
+        "Emboss": [
+          "Height",
+          "TaperAngle",
+          "PunchInnerRadius",
+          "PunchOuterRadius",
+          "DieInnerRadius",
+          "DieOuterRadius"
+        ],
+        "Gusset": [
+          "Width",
+          "Depth",
+          "HeadAngle",
+          "Radius"
+        ],
+        "Louver": [
+          "Breadth"
+        ],
+        "Spoon": [
+          "Length",
+          "FlangeWidth",
+          "Width",
+          "Height"
+        ],
+        "Distance": [
+          "MinValue",
+          "Distance"
+        ],
+        "Hole": [
+          "Radius",
+          "Diameter"
+        ],
+        "SimpleHole": [
+          "Radius",
+          "Diameter"
+        ],
+        "CompoundHole": [
+          "Radius",
+          "Diameter",
+          "Depth"
+        ],
+        "CBHole": [
+          "Radius",
+          "Diameter",
+          "Depth",
+          "BoreRadius",
+          "BoreDiameter",
+          "BoreDepth"
+        ],
+        "CSHole": [
+          "Radius",
+          "Diameter",
+          "Depth",
+          "SunkRadius",
+          "SunkDiameter",
+          "SunkDepth",
+          "SunkAngle"
+        ],
+        "CDHole": [
+          "Radius",
+          "Diameter",
+          "Depth",
+          "DrillDepth",
+          "DrillRadius",
+          "DrillDiameter",
+          "SunkDepth",
+          "SunkAngle"
+        ]
+      },
+      "module_params": {
+        "ModuleParams": [
+          "Thickness",
+          "IsSheetMetalPart"
+        ],
+        "SheetMetal": [
+          "Thickness"
+        ]
+      }
+    },
+    "Sheetmetal Forming": {
+      "canonical_name": "Sheetmetal Forming",
+      "aliases": [
+        "Sheet Metal Forming",
+        "SMForm",
+        "smform",
+        "sheetmetal forming",
+        "sheet metal forming"
+      ],
+      "features_key": "SMForm",
+      "features": {
+        "SimpleHole": [
+          "Radius",
+          "Diameter",
+          "Depth",
+          "TaperAngle",
+          "IsTapered"
+        ],
+        "Bend": [
+          "Radius"
+        ],
+        "SMFace": [
+          "Thickness"
+        ]
+      },
+      "module_params": {
+        "ModuleParams": [
+          "NormalThickness"
+        ],
+        "SheetMetalForm": [
+          "NominalThickness"
+        ]
+      }
+    },
+    "Die Casting": {
+      "canonical_name": "Die Casting",
+      "aliases": [
+        "Die Cast",
+        "casting",
+        "die casting",
+        "diecasting"
+      ],
+      "features_key": "Die Cast",
+      "features": {
+        "MoldFace": [
+          "MinThickness",
+          "MaxThickness",
+          "MoldWallThickness",
+          "DraftAngle",
+          "MoldClassificationType",
+          "IsUndercut",
+          "IsFillet",
+          "Height"
+        ],
+        "Boss": [
+          "OuterRadiusAtTop",
+          "OuterDiameterAtTop",
+          "OuterRadiusAtBot",
+          "OuterDiameterAtBot",
+          "InnerRadiusAtTop",
+          "InnerDiameterAtTop",
+          "InnerRadiusAtBot",
+          "InnerDiameterAtBot",
+          "TotalHeight",
+          "IsPartial",
+          "OuterSurfaceDraftAngle",
+          "InnerSurfaceDraftAngle",
+          "WrapAngle",
+          "IsChamferAtTop"
+        ],
+        "Rib": [
+          "DraftAngle",
+          "ProfileArea",
+          "RadiusAtBot",
+          "Height",
+          "TopThickness",
+          "ThicknessAtBotWithFillet",
+          "ThicknessAtBot"
+        ],
+        "WallThickness": [
+          "MinValue",
+          "MaxValue"
+        ],
+        "MoldWall": [
+          "MinValue",
+          "Height"
+        ],
+        "Draft": [
+          "Angle",
+          "Type",
+          "Height"
+        ],
+        "Text": [
+          "Height",
+          "DraftAngle"
+        ]
+      },
+      "module_params": {}
+    },
+    "Injection Molding": {
+      "canonical_name": "Injection Molding",
+      "aliases": [
+        "Injection Moulding",
+        "injection molding",
+        "injection moulding",
+        "im",
+        "molding",
+        "moulding"
+      ],
+      "features_key": "Injection Moulding",
+      "features": {
+        "Hole": [
+          "RadiusAtTop",
+          "DiameterAtTop",
+          "RadiusAtBot",
+          "DiameterAtBot",
+          "TotalDepth",
+          "IsBlind",
+          "IsPartial",
+          "IsTapered",
+          "TaperAngle"
+        ],
+        "Pin": [
+          "RadiusAtTop",
+          "DiameterAtTop",
+          "TotalHeight",
+          "IsPartial",
+          "IsTopSpherical",
+          "WrapAngle"
+        ],
+        "IMFace": [
+          "MinThickness",
+          "MaxThickness",
+          "MoldWallThickness",
+          "DraftAngle",
+          "MoldClassificationType",
+          "IsUndercut"
+        ],
+        "Lip": [
+          "MinThickness",
+          "RadiusAtBot"
+        ],
+        "Boss": [
+          "OuterRadiusAtTop",
+          "OuterDiameterAtTop",
+          "OuterRadiusAtBot",
+          "OuterDiameterAtBot",
+          "InnerRadiusAtTop",
+          "InnerDiameterAtTop",
+          "InnerRadiusAtBot",
+          "InnerDiameterAtBot",
+          "TotalHeight",
+          "IsPartial",
+          "OuterSurfaceDraftAngle",
+          "InnerSurfaceDraftAngle",
+          "WrapAngle",
+          "IsChamferAtTop"
+        ],
+        "Rib": [
+          "DraftAngle",
+          "ProfileArea",
+          "RadiusAtBot",
+          "Height",
+          "TopThickness",
+          "ThicknessAtBotWithFillet",
+          "ThicknessAtBot"
+        ],
+        "Draft": [
+          "Angle",
+          "Type",
+          "Height"
+        ],
+        "Text": [
+          "Height",
+          "DraftAngle"
+        ]
+      },
+      "module_params": {
+        "ModuleParams": [
+          "NominalThickness"
+        ]
+      }
+    },
+    "Drilling": {
+      "canonical_name": "Drilling",
+      "aliases": [
+        "Drill",
+        "drill",
+        "drilling"
+      ],
+      "features_key": "Drill",
+      "features": {
+        "Hole": [
+          "Radius",
+          "Diameter",
+          "IsBlind",
+          "IsThreaded",
+          "ThreadDepth",
+          "DrillDepth",
+          "ThreadSize",
+          "ThreadDrillDiameter",
+          "ThreadType",
+          "EntryAngle",
+          "ExitAngle",
+          "IsFlatBottom",
+          "IsPartial",
+          "WrapAngle",
+          "TipDepth",
+          "TipAngle",
+          "NumElemHole",
+          "TotalDepth",
+          "PositionTolerance"
+        ],
+        "HoleSegment": [
+          "Radius",
+          "Diameter",
+          "Depth",
+          "TaperAngle",
+          "IsTapered",
+          "IsPartial",
+          "WrapAngle",
+          "PositionTolerance"
+        ],
+        "SimpleHole": [
+          "Radius",
+          "Diameter",
+          "IsBlind",
+          "IsThreaded",
+          "ThreadDepth",
+          "DrillDepth",
+          "ThreadSize",
+          "ThreadDrillDiameter",
+          "ThreadType",
+          "EntryAngle",
+          "ExitAngle",
+          "IsFlatBottom",
+          "IsPartial",
+          "WrapAngle",
+          "TipDepth",
+          "TipAngle",
+          "NumElemHole",
+          "TotalDepth",
+          "TaperAngle",
+          "IsTapered",
+          "Depth",
+          "PositionTolerance"
+        ],
+        "CompoundHole": [
+          "Radius",
+          "Diameter",
+          "IsBlind",
+          "IsThreaded",
+          "ThreadDepth",
+          "DrillDepth",
+          "ThreadSize",
+          "ThreadDrillDiameter",
+          "ThreadType",
+          "EntryAngle",
+          "ExitAngle",
+          "IsFlatBottom",
+          "IsPartial",
+          "WrapAngle",
+          "TipDepth",
+          "TipAngle",
+          "NumElemHole",
+          "TotalDepth",
+          "Depth",
+          "PositionTolerance"
+        ],
+        "CBHole": [
+          "Radius",
+          "Diameter",
+          "IsBlind",
+          "IsThreaded",
+          "ThreadDepth",
+          "DrillDepth",
+          "ThreadSize",
+          "ThreadDrillDiameter",
+          "ThreadType",
+          "EntryAngle",
+          "ExitAngle",
+          "IsFlatBottom",
+          "IsPartial",
+          "WrapAngle",
+          "TipDepth",
+          "TipAngle",
+          "NumElemHole",
+          "TotalDepth",
+          "Depth",
+          "BoreRadius",
+          "BoreDiameter",
+          "BoreDepth",
+          "PositionTolerance"
+        ],
+        "CSHole": [
+          "Radius",
+          "Diameter",
+          "IsBlind",
+          "IsThreaded",
+          "ThreadDepth",
+          "DrillDepth",
+          "ThreadSize",
+          "ThreadDrillDiameter",
+          "ThreadType",
+          "EntryAngle",
+          "ExitAngle",
+          "IsFlatBottom",
+          "IsPartial",
+          "WrapAngle",
+          "TipDepth",
+          "TipAngle",
+          "NumElemHole",
+          "TotalDepth",
+          "Depth",
+          "SunkRadius",
+          "SunkDiameter",
+          "SunkDepth",
+          "SunkAngle",
+          "PositionTolerance"
+        ],
+        "CDHole": [
+          "Radius",
+          "Diameter",
+          "IsBlind",
+          "IsThreaded",
+          "ThreadDepth",
+          "DrillDepth",
+          "ThreadSize",
+          "ThreadDrillDiameter",
+          "ThreadType",
+          "EntryAngle",
+          "ExitAngle",
+          "IsFlatBottom",
+          "IsPartial",
+          "WrapAngle",
+          "TipDepth",
+          "TipAngle",
+          "NumElemHole",
+          "TotalDepth",
+          "Depth",
+          "BoreRadius",
+          "BoreDiameter",
+          "SunkDepth",
+          "SunkAngle",
+          "BoreDepth",
+          "PositionTolerance"
+        ],
+        "HoleChain": [
+          "IsBlind",
+          "IsThreaded",
+          "ThreadDepth",
+          "DrillDepth",
+          "ThreadSize",
+          "ThreadDrillDiameter",
+          "ThreadType",
+          "EntryAngle",
+          "ExitAngle",
+          "IsFlatBottom",
+          "IsPartial",
+          "WrapAngle",
+          "TipDepth",
+          "TipAngle",
+          "NumElemHole",
+          "TotalDepth",
+          "MaxRadius",
+          "MaxDiameter",
+          "MinRadius",
+          "MinDiameter",
+          "PositionTolerance"
+        ],
+        "PartFace": [
+          "Color"
+        ]
+      },
+      "module_params": {}
+    },
+    "Milling": {
+      "canonical_name": "Milling",
+      "aliases": [
+        "Mill",
+        "mill",
+        "milling"
+      ],
+      "features_key": "Mill",
+      "features": {
+        "Pocket": [
+          "Depth",
+          "IsDrafted",
+          "DraftAngle",
+          "MinSideRadius",
+          "MaxSideRadius",
+          "MinBotRadius",
+          "MaxBotRadius",
+          "IsOpen",
+          "IsBotFilleted",
+          "IsTopFilleted",
+          "IsSideFilleted",
+          "NumBotSharpEdges",
+          "NumSideSharpEdges",
+          "DraftType",
+          "IsBotChamfered",
+          "SideFaceAngle",
+          "ExtendedDepth"
+        ],
+        "BotFillet": [
+          "MinRadius",
+          "MaxRadius",
+          "IsVariableRadius"
+        ],
+        "SideFillet": [
+          "MinRadius",
+          "MaxRadius",
+          "IsVariableRadius"
+        ],
+        "TopFillet": [
+          "MinRadius",
+          "MaxRadius",
+          "IsVariableRadius"
+        ],
+        "Fillet": [
+          "MinRadius",
+          "MaxRadius",
+          "IsVariableRadius"
+        ],
+        "Chamfer": [
+          "Width",
+          "Angle1",
+          "Angle2",
+          "IsVertex",
+          "Distance1",
+          "Distance2"
+        ],
+        "PMI": [
+          "ProfileOfLine",
+          "ProfileOfSurface",
+          "SurfaceFinish"
+        ]
+      },
+      "module_params": {
+        "ModuleParams": [
+          "Machinability"
+        ]
+      }
+    },
+    "Assembly": {
+      "canonical_name": "Assembly",
+      "aliases": [
+        "assembly"
+      ],
+      "features_key": "Assembly",
+      "features": {
+        "Component": [
+          "Name",
+          "FileName",
+          "Identifier",
+          "ParentName",
+          "ParentFileName",
+          "ParentIdentifier",
+          "Type"
+        ],
+        "Distance": [
+          "Value",
+          "CustomValue"
+        ],
+        "Interference": [
+          "IsInterfering",
+          "Volume"
+        ],
+        "Clearance": [
+          "MinValue",
+          "IsTouching",
+          "IsInterfering"
+        ],
+        "Fastener": [
+          "Type",
+          "Name",
+          "IsWasherPresent",
+          "IsFirstEngagedCompInContact",
+          "WrenchFlatDiameter",
+          "BearingArea",
+          "MinSupportWidth",
+          "ContactWidth",
+          "FirstEngagedComp",
+          "ScrewDiameter",
+          "FirstEngagedHole"
+        ],
+        "Bolt": [
+          "Size",
+          "Name",
+          "IsWasherPresent",
+          "IsFirstEngagedCompInContact",
+          "WrenchFlatDiameter",
+          "BearingArea",
+          "MinSupportWidth",
+          "ContactWidth",
+          "FirstEngagedComp",
+          "ScrewDiameter",
+          "FirstEngagedHole",
+          "ClearanceHoleDepth",
+          "ShankLength",
+          "ThreadPitch",
+          "ExtendedThreadLength",
+          "LastEngagedHole",
+          "IsThreaded",
+          "Length"
+        ],
+        "Nut": [
+          "Name",
+          "IsWasherPresent",
+          "IsFirstEngagedCompInContact",
+          "WrenchFlatDiameter",
+          "BearingArea",
+          "MinSupportWidth",
+          "ContactWidth",
+          "FirstEngagedComp",
+          "ScrewDiameter",
+          "FirstEngagedHole"
+        ]
+      },
+      "module_params": {}
+    },
+    "Additive Manufacturing": {
+      "canonical_name": "Additive Manufacturing",
+      "aliases": [
+        "Additive",
+        "additive",
+        "additive manufacturing",
+        "3d printing",
+        "am"
+      ],
+      "features_key": "Additive",
+      "features": {
+        "AMFace": [
+          "MinThickness",
+          "MaxThickness",
+          "MinGap"
+        ],
+        "Pin": [
+          "RadiusAtTop",
+          "DiameterAtTop",
+          "TotalHeight",
+          "IsPartial",
+          "IsTopSpherical"
+        ],
+        "Hole": [
+          "RadiusAtTop",
+          "DiameterAtTop",
+          "RadiusAtBot",
+          "DiameterAtBot",
+          "TotalDepth",
+          "IsBlind",
+          "IsPartial",
+          "IsTapered",
+          "TaperAngle"
+        ],
+        "Text": [
+          "Height",
+          "Width"
+        ],
+        "Wall": [
+          "MinThickness",
+          "MaxThickness",
+          "IsSupported"
+        ],
+        "PMI": [
+          "Angularity"
+        ],
+        "PrintSize": [
+          "Length",
+          "Height",
+          "Width"
+        ]
+      },
+      "module_params": {
+        "ModuleParams": [
+          "NominalThickness",
+          "SubProcessType"
+        ],
+        "PrintSize": [
+          "Length",
+          "Height",
+          "Width"
+        ]
+      }
+    },
+    "Turning": {
+      "canonical_name": "Turning",
+      "aliases": [
+        "Turn",
+        "turn",
+        "turning",
+        "lathe"
+      ],
+      "features_key": "Turn",
+      "features": {
+        "TurnCorner": [
+          "Radius",
+          "IsSharp",
+          "IsConcave"
+        ],
+        "FaceFeature": [
+          "FlatnessTolerance",
+          "PerpendicularityTolerance",
+          "SurfaceFinish"
+        ],
+        "TurnProfileSegment": [
+          "MinAngle",
+          "MaxAngle",
+          "IsExternal",
+          "IsLinear",
+          "Length",
+          "MaxContourRadius",
+          "MinContourRadius",
+          "MaxDiameter",
+          "MinDiameter",
+          "StraightnessTolerance",
+          "CircularityTolerance",
+          "CylindricityTolerance",
+          "PerpendicularityTolerance",
+          "ProfileOfLineTolerance",
+          "ProfileOfSurfaceTolerance",
+          "ConcentricityTolerance",
+          "PositionTolerance",
+          "RunoutTolerance",
+          "TotalRunoutTolerance"
+        ],
+        "Body": [
+          "Length",
+          "MaxOuterDiameter",
+          "MinOuterDiameter",
+          "MaxInnerDiameter",
+          "MinInnerDiameter"
+        ],
+        "BoredHoleSegment": [
+          "MinDiameter",
+          "MaxDiameter",
+          "IsBlind",
+          "Depth",
+          "Angle"
+        ],
+        "BoredHole": [
+          "MinDiameter",
+          "MaxDiameter",
+          "IsBlind",
+          "Depth"
+        ],
+        "Relief": [
+          "Value"
+        ],
+        "SquareGroove": [
+          "Depth"
+        ],
+        "VGroove": [
+          "Radius",
+          "Angle"
+        ],
+        "RoundGroove": [
+          "Radius"
+        ],
+        "DoveTailGroove": [
+          "Angle"
+        ],
+        "Groove": [
+          "Location",
+          "Type",
+          "MinCornerRadius",
+          "Depth",
+          "FloorWidth",
+          "TopWidth",
+          "MinDistance"
+        ]
+      },
+      "module_params": {
+        "ModuleParams": [
+          "MPBody"
+        ],
+        "Body": [
+          "Length",
+          "MaxOuterDiameter",
+          "MinOuterDiameter",
+          "MaxInnerDiameter",
+          "MinInnerDiameter"
+        ]
+      }
+    },
+    "Tubing": {
+      "canonical_name": "Tubing",
+      "aliases": [
+        "Tube",
+        "tube",
+        "tubing"
+      ],
+      "features_key": "Tubing",
+      "features": {
+        "Bend": [
+          "Radius",
+          "Angle",
+          "IsAtEnd",
+          "SupportLength1",
+          "SupportLength2"
+        ],
+        "Straight": [
+          "Length",
+          "IsAtEnd"
+        ],
+        "Clearance": [
+          "MinValue",
+          "IsTouching",
+          "IsInterfering"
+        ],
+        "Interference": [
+          "IsInterfering",
+          "Volume"
+        ],
+        "Tube": [
+          "Thickness",
+          "OuterDiameter",
+          "InnerDiameter",
+          "Length",
+          "IsUniformBendRadius",
+          "MaxBendRadius",
+          "MinBendRadius"
+        ],
+        "Overlap": [
+          "Length"
+        ]
+      },
+      "module_params": {}
+    },
+    "General": {
+      "canonical_name": "General",
+      "aliases": [
+        "general"
+      ],
+      "features_key": "General",
+      "features": {
+        "PMI": [
+          "Straightness",
+          "Flatness",
+          "Circularity",
+          "Cylindricity",
+          "Angularity",
+          "Parallelism",
+          "Perpendicularity",
+          "ProfileOfLine",
+          "ProfileOfSurface",
+          "SurfaceProfileTolerance",
+          "Position",
+          "PositionTolerance",
+          "Concentricity",
+          "Symmetry",
+          "Runout",
+          "TotalRunout",
+          "IsAttached"
+        ],
+        "PartEdge": [
+          "IsSharp"
+        ],
+        "Hole": [
+          "InternalThreadClass",
+          "PositionTolerance"
+        ],
+        "Thread": [
+          "ExternalThreadClass",
+          "Size",
+          "Unit"
+        ],
+        "PartBody": [
+          "Material",
+          "Length",
+          "Width",
+          "Height",
+          "DiagonalLength",
+          "TightBoxLength",
+          "TightBoxWidth",
+          "TightBoxHeight",
+          "TightBoxDiagonalLength",
+          "Volume",
+          "SurfaceArea",
+          "SurfaceProfileTolerance",
+          "PositionTolerance",
+          "MaterialThickness"
+        ]
+      },
+      "module_params": {}
+    }
+  }
+}
