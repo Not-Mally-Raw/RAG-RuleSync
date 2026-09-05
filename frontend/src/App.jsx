@@ -16,7 +16,10 @@ import {
   Upload,
 } from 'lucide-react';
 
-const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
+// When running through Vite dev server, use relative URLs so the proxy forwards to the backend.
+// For production or standalone testing, set VITE_API_BASE_URL in your .env file.
+const API_BASE_URL = import.meta.env.VITE_API_BASE_URL || '';
+
 
 const DOMAIN_OPTIONS = [
   { label: 'Auto detect', value: '' },
@@ -86,7 +89,10 @@ function App() {
   useEffect(() => {
     const checkServer = async () => {
       try {
-        const response = await fetch(`${API_BASE_URL}/`);
+        // Health check always hits the backend root directly.
+        // Falls back to http://localhost:8000 if VITE_API_BASE_URL is not set.
+        const healthUrl = import.meta.env.VITE_API_BASE_URL || 'http://localhost:8000';
+        const response = await fetch(`${healthUrl}/`);
         setServerStatus(response.ok ? 'online' : 'offline');
       } catch {
         setServerStatus('offline');
@@ -180,20 +186,31 @@ function App() {
 
   const sendToBuilder = () => {
     const indexes = selectedRules.size > 0 ? Array.from(selectedRules) : extractedRules.map((_, index) => index);
-    const lines = indexes
+    const rawTexts = indexes
       .map((index) => extractedRules[index])
       .map((rule) => rule.resolved_rule_text || rule.rule_text)
       .filter(Boolean);
 
-    if (lines.length === 0) return;
-    setRulesFromLines(lines);
+    if (rawTexts.length === 0) return;
+
+    // Split any multi-line or bulleted items so each rule has its own clean line in the compiler
+    const cleanLines = rawTexts.flatMap((text) =>
+      text
+        .replace(/\r\n/g, '\n')
+        .split('\n')
+        .map((l) => l.replace(/^\s*(?:[-â€¢*â€“â€”]|\(?\d+[.)]|\([a-zA-Z]\))\s*/, '').trim())
+        .filter((l) => l.length > 5)
+    );
+
+    setRulesFromLines(cleanLines.length > 0 ? cleanLines : rawTexts);
     setActiveTab('formalize');
   };
 
   const buildPayload = () => {
     const lines = ruleInput
+      .replace(/\r\n/g, '\n')
       .split('\n')
-      .map((line) => line.trim())
+      .map((line) => line.replace(/^\s*(?:[-â€¢*â€“â€”]|\(?\d+[.)]|\([a-zA-Z]\))\s*/, '').trim())
       .filter(Boolean);
 
     return {

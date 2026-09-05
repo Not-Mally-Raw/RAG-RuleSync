@@ -1,9 +1,9 @@
 import json
 import re
 
-from schema.feature_schema import features_dict
-from schema.tolerance_schema import TOLERANCE_TYPES, GDT_KEYWORDS
-from llm.prompts import TOLERANCE_PROMPT
+from dfm_rule_pipeline.schema.feature_schema import features_dict
+from dfm_rule_pipeline.schema.tolerance_schema import TOLERANCE_TYPES, GDT_KEYWORDS
+from dfm_rule_pipeline.llm.prompts import TOLERANCE_PROMPT
 
 def resolve_tolerance(llm, rule_text: str, intent_input) -> dict:
     # ------------------------------------------------------------------

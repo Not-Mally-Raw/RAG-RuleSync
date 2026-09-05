@@ -1,5 +1,5 @@
 import json
-from llm.prompts import INTENT_PROMPT
+from dfm_rule_pipeline.llm.prompts import INTENT_PROMPT
 # We removed call_with_timeout import because we trust the client's infinite loop
 
 def extract_intent(llm, rule_text: str) -> dict:

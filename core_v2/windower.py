@@ -14,35 +14,48 @@ class TextWindow:
     source_document: str
     block_sentences: List[str] = field(default_factory=list)
 
+
 class SlidingWindowGenerator:
     def __init__(self, window_size: int = 3, stride: int = 1):
         self.window_size = window_size
         self.stride = stride
-        # Load English tokenizer, tagger, parser, NER and word vectors
+
+        # Load the spaCy English model for sentence boundary detection.
+        # If it is not installed, raise a clear error with install instructions.
         try:
             self.nlp = spacy.load("en_core_web_sm")
         except OSError:
-            from spacy.cli import download
-            download("en_core_web_sm")
-            self.nlp = spacy.load("en_core_web_sm")
-            
-        # We only need sentence segmentation
-        self.nlp.select_pipes(enable=["tok2vec", "parser", "senter"])
-        
+            raise RuntimeError(
+                "spaCy model 'en_core_web_sm' is not installed.\n"
+                "Run the following command to install it:\n\n"
+                "    python -m spacy download en_core_web_sm\n"
+            )
+
+        # Enable only the components needed for sentence segmentation.
+        # 'en_core_web_sm' ships with: tok2vec, tagger, parser, senter, ner, attribute_ruler, lemmatizer
+        # We only need sentence boundaries so disable everything except what sents needs.
+        available_pipes = self.nlp.pipe_names
+        pipes_to_enable = [p for p in ["tok2vec", "parser", "senter"] if p in available_pipes]
+        if pipes_to_enable:
+            self.nlp.select_pipes(enable=pipes_to_enable)
+
+        # Custom component: prevent sentence splits on engineering abbreviations
         @spacy.Language.component("custom_engineering_sbd")
         def custom_engineering_sbd(doc):
+            abbreviations = {
+                "in.", "mm.", "approx.", "max.", "min.", "dia.", "rad.",
+                "fig.", "e.g.", "i.e.", "note:", "note"
+            }
             for i, token in enumerate(doc[:-1]):
                 text = token.text.lower()
-                # Prevent split after abbreviations and "NOTE:"
-                if text in ("in.", "mm.", "approx.", "max.", "min.", "dia.", "rad.", "fig.", "e.g.", "i.e.", "note:", "note"):
+                if text in abbreviations:
                     doc[i + 1].is_sent_start = False
-                # If the token is 'NOTE' and next is ':', prevent split after ':'
+                # If "NOTE" is followed by ":", keep continuation glued
                 if text == "note" and doc[i + 1].text == ":":
                     if i + 2 < len(doc):
                         doc[i + 2].is_sent_start = False
             return doc
-            
-        # Add the custom component before parser
+
         if "custom_engineering_sbd" not in self.nlp.pipe_names:
             if "parser" in self.nlp.pipe_names:
                 self.nlp.add_pipe("custom_engineering_sbd", before="parser")
@@ -53,18 +66,16 @@ class SlidingWindowGenerator:
 
     def generate(self, blocks: List[StructuralBlock]) -> List[TextWindow]:
         windows = []
-        
+
         for block in blocks:
-            # We treat headers as context, but usually don't window them
-            # For now we'll window everything that is text
             doc = self.nlp(block.text)
             sentences = [sent.text.strip() for sent in doc.sents if sent.text.strip()]
-            
+
             if not sentences:
                 continue
-                
+
             if len(sentences) <= self.window_size:
-                # Block is smaller than window size; emit entire block
+                # Block is smaller than window size; emit as a single window
                 windows.append(TextWindow(
                     window_id=f"{block.block_id}_w0",
                     text=" ".join(sentences),
@@ -89,5 +100,5 @@ class SlidingWindowGenerator:
                         source_document=block.source_document,
                         block_sentences=sentences
                     ))
-                    
+
         return windows

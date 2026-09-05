@@ -1,5 +1,6 @@
 import sys
 import logging
+import uuid
 from pathlib import Path
 
 # Add project root to path
@@ -38,7 +39,8 @@ class MockLLM:
 def test_extraction():
     parser = LayoutAwareParser()
     windower = SlidingWindowGenerator(window_size=1, stride=1)
-    db_file = Path("test_truth_store.db")
+    db_file = Path(".test_tmp") / f"test_truth_store_{uuid.uuid4().hex}.db"
+    db_file.parent.mkdir(exist_ok=True)
     if db_file.exists(): db_file.unlink()
     truth_store = TruthStore(db_file)
     from dfm_rule_pipeline.config import EMBEDDING_MODEL

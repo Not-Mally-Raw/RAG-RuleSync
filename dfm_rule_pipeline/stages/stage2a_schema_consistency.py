@@ -1,5 +1,5 @@
 import json
-from schema.feature_schema import features_dict
+from dfm_rule_pipeline.schema.feature_schema import features_dict
 
 # ------------------------------------------------------------------
 # CANONICAL MAP (STRICT, EXPLICIT, SCHEMA-BOUND)

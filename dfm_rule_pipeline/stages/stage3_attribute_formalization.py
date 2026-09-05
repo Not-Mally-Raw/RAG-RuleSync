@@ -1,6 +1,6 @@
 import json
 import re
-from llm.prompts import ATTRIBUTE_MATH_PROMPT
+from dfm_rule_pipeline.llm.prompts import ATTRIBUTE_MATH_PROMPT
 
 # ------------------------------------------------------------------
 # HELPER: FORCE PASCAL CASE (The "Fixer")

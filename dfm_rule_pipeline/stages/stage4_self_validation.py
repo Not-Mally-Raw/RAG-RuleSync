@@ -1,7 +1,7 @@
 import json
 import re
-from llm.prompts import SELF_VALIDATE_PROMPT
-from schema.feature_schema import features_dict
+from dfm_rule_pipeline.llm.prompts import SELF_VALIDATE_PROMPT
+from dfm_rule_pipeline.schema.feature_schema import features_dict
 
 
 def get_schema_for_domain(domain):

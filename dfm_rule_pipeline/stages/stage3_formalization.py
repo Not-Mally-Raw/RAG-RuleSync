@@ -1,6 +1,6 @@
 import json
-from llm.prompts import FORMALIZATION_PROMPT
-from schema.feature_schema import features_dict
+from dfm_rule_pipeline.llm.prompts import FORMALIZATION_PROMPT
+from dfm_rule_pipeline.schema.feature_schema import features_dict
 
 
 def formalize_rule(llm, schema_mapping_json: str) -> str:

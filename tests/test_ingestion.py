@@ -1,6 +1,7 @@
 import sys
 from pathlib import Path
 import json
+import uuid
 
 sys.path.append(str(Path(__file__).parent.parent))
 
@@ -45,7 +46,8 @@ def test_ingestion():
         
     # 3. Truth Store
     print("\nInitializing Truth Store...")
-    db_path = Path("test_truth_store.db")
+    db_path = Path(".test_tmp") / f"test_truth_store_{uuid.uuid4().hex}.db"
+    db_path.parent.mkdir(exist_ok=True)
     if db_path.exists():
         db_path.unlink()
         

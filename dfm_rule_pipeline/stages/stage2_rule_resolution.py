@@ -1,6 +1,6 @@
 import json
-from schema.domain_definitions import DOMAIN_DEFINITIONS
-from llm.prompts import DOMAIN_RESOLVER_PROMPT
+from dfm_rule_pipeline.schema.domain_definitions import DOMAIN_DEFINITIONS
+from dfm_rule_pipeline.llm.prompts import DOMAIN_RESOLVER_PROMPT
 
 
 def _build_definitions_block() -> str:

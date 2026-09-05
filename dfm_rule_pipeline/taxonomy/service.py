@@ -23,49 +23,54 @@ logger = logging.getLogger("taxonomy.service")
 
 
 def _sanitize_rule_text(text: str) -> str:
-    """Sanitize raw rule text (stripping LaTeX math delimiters and replacing unescaped braces)."""
+    """Sanitize raw rule text (stripping LaTeX math delimiters, unescaped braces, and leading list bullets)."""
     if not text:
         return text
     clean = re.sub(r"\\\((.*?)\\\)", r"\1", text)
     clean = re.sub(r"\\\$(.*?)\\\$", r"\1", clean)
     clean = clean.replace("{", "(").replace("}", ")")
+    clean = re.sub(r"^\s*(?:[-•*–—]|\(?\d+[\.\)]|\([a-zA-Z]\))\s*", "", clean)
     return clean.strip()
 
 
 def _split_into_rule_sentences(text: str) -> List[str]:
     """
-    Splits multi-sentence paragraphs into semantically grouped rule chunks.
+    Splits multi-sentence paragraphs, bullet points, and numbered lists
+    into semantically independent rule chunks.
     
-    Key insight: NOT every sentence is an independent rule. Some sentences are
-    continuations of the previous rule (e.g. "If the material is a superalloy,
-    the ratio limit reduces to 3.0" continues the L/D ratio rule from the
-    previous sentence). These must be MERGED with their parent sentence.
-    
-    Detection heuristics for continuation sentences:
-    - Anaphoric references: "the ratio", "the limit", "the value", "this",
-      "that", "it reduces", "it increases"
-    - No new feature/object introduction (no new Feature.Attribute pattern)
-    - Topic-shift markers indicate a NEW rule: "Additionally", "Furthermore",
-      "Moreover", "Also", "Note that", "Separately"
+    Preserves rule continuation sentences (e.g. 'otherwise...', 'if the material is superalloy,
+    the ratio limit reduces to...') with their parent sentence.
     """
-    if not text:
+    if not text or not text.strip():
         return []
     
-    # --- Phase 1: Split into raw sentences ---
-    # Split on period + space + capital letter
-    raw_sentences = re.split(r'\.(?=\s+[A-Z])', text)
-    raw_sentences = [s.strip().rstrip('.') + '.' for s in raw_sentences if s.strip() and len(s.strip()) > 10]
+    text = text.replace("\r\n", "\n").replace("\r", "\n").strip()
     
-    if len(raw_sentences) <= 1:
-        return [text]
+    # 1. Check for newline-delimited rules / bullet points
+    lines = [l.strip() for l in text.split("\n") if l.strip()]
+    if len(lines) > 1:
+        raw_candidates = []
+        for line in lines:
+            c = _sanitize_rule_text(line)
+            if c:
+                raw_candidates.append(c)
+    else:
+        # 2. Check for inline numbered or bullet points: e.g. '1. ... 2. ...' or '- ... - ...'
+        inline_marker = re.compile(r'(?:^|(?<=[.!?])\s+|\s+[-•*–—]\s+)(?:[-•*–—]|\(?\d+[\.\)]|\([a-zA-Z]\))\s+')
+        parts = [_sanitize_rule_text(p) for p in inline_marker.split(text) if p.strip()]
+        if len(parts) > 1:
+            raw_candidates = parts
+        else:
+            # 3. Standard sentence split on period followed by space + capital letter
+            sentences = re.split(r'\.(?=\s+[A-Z])', text)
+            raw_candidates = [_sanitize_rule_text(s).rstrip('.') + '.' for s in sentences if s.strip()]
     
-    # --- Phase 2: Detect topic-shift vs continuation ---
-    # Topic-shift markers that signal a NEW independent rule
-    _TOPIC_SHIFT_RE = re.compile(
-        r'(?i)^\s*(Additionally|Furthermore|Moreover|Also|Note\s+that|Separately|In\s+addition|On\s+the\s+other\s+hand)\b'
-    )
+    # Filter out empty or tiny fragments (< 10 chars)
+    candidates = [c.rstrip('.') + '.' if not c.endswith('.') else c for c in raw_candidates if len(c) > 10]
+    if len(candidates) <= 1:
+        return [text.strip()]
     
-    # Anaphoric / continuation indicators that signal SAME rule continuation
+    # Continuation indicators that signal SAME rule continuation (e.g. conditional branches)
     _CONTINUATION_RE = re.compile(
         r'(?i)\b(the\s+ratio|the\s+limit|the\s+value|the\s+tolerance|the\s+threshold|'
         r'this\s+value|this\s+ratio|this\s+limit|that\s+value|'
@@ -73,34 +78,20 @@ def _split_into_rule_sentences(text: str) -> List[str]:
         r'the\s+same\s+|otherwise|in\s+that\s+case)\b'
     )
     
-    # --- Phase 3: Group sentences ---
     groups: List[str] = []
-    current_group: List[str] = [raw_sentences[0].rstrip('.')]
-    
-    for sent in raw_sentences[1:]:
-        clean_sent = sent.rstrip('.')
-        
-        has_topic_shift = bool(_TOPIC_SHIFT_RE.search(clean_sent))
-        has_continuation = bool(_CONTINUATION_RE.search(clean_sent))
-        
-        if has_topic_shift and not has_continuation:
-            # This is a NEW independent rule — flush current group
-            groups.append('. '.join(current_group) + '.')
-            # Strip the topic-shift word prefix for cleaner formalization
-            stripped = _TOPIC_SHIFT_RE.sub('', clean_sent).strip().lstrip(',').strip()
-            current_group = [stripped]
-        elif has_continuation and not has_topic_shift:
-            # Continuation of the same rule — merge with current group
-            current_group.append(clean_sent)
+    current = candidates[0]
+    for nxt in candidates[1:]:
+        if _CONTINUATION_RE.search(nxt):
+            # Continuation sentence — merge with current rule
+            current = current.rstrip('.') + '. ' + nxt
         else:
-            # Ambiguous: default to merging with current group (safer)
-            current_group.append(clean_sent)
-    
-    # Flush final group
-    if current_group:
-        groups.append('. '.join(current_group) + '.')
-    
-    return groups if groups else [text]
+            # Standalone independent rule
+            groups.append(current)
+            current = nxt
+    if current:
+        groups.append(current)
+        
+    return groups if groups else [text.strip()]
 
 
 class TaxonomyFormalizationService:

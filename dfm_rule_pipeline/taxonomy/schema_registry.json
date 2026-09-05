@@ -17,7 +17,8 @@
           "Angle",
           "IsNullRadius",
           "IsConical",
-          "Radius"
+          "Radius",
+          "Type"
         ],
         "BendRelief": [
           "Depth",
@@ -28,7 +29,8 @@
           "Angle",
           "Length",
           "SurfaceProfileTolerance",
-          "HemOpening"
+          "HemOpening",
+          "Height"
         ],
         "OpenHem": [
           "Radius",
@@ -67,7 +69,8 @@
           "PunchOuterRadius",
           "Height",
           "Radius",
-          "Depth"
+          "Depth",
+          "Diameter"
         ],
         "Bridge": [
           "Length",
@@ -129,7 +132,8 @@
         ],
         "Distance": [
           "MinValue",
-          "Distance"
+          "Distance",
+          "IdealMinValue"
         ],
         "Hole": [
           "Radius",

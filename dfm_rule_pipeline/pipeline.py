@@ -3,16 +3,16 @@ import os
 import csv
 from tqdm import tqdm
 
-from stages.stage1_intent_extraction import extract_intent
-from stages.stage2_rule_resolution import resolve_rule_category_and_domain
-from stages.stage2b_geometry_resolution import resolve_geometry
-from stages.stage2c_tolerance_spec import resolve_tolerance
-from stages.stage3_formalization import formalize_rule
-from stages.stage4_self_validation import self_validate
-from stages.stage3_attribute_formalization import formalize_attribute_rule
+from dfm_rule_pipeline.stages.stage1_intent_extraction import extract_intent
+from dfm_rule_pipeline.stages.stage2_rule_resolution import resolve_rule_category_and_domain
+from dfm_rule_pipeline.stages.stage2b_geometry_resolution import resolve_geometry
+from dfm_rule_pipeline.stages.stage2c_tolerance_spec import resolve_tolerance
+from dfm_rule_pipeline.stages.stage3_formalization import formalize_rule
+from dfm_rule_pipeline.stages.stage4_self_validation import self_validate
+from dfm_rule_pipeline.stages.stage3_attribute_formalization import formalize_attribute_rule
 
 # 1. IMPORT FEATURES DICT
-from schema.feature_schema import features_dict 
+from dfm_rule_pipeline.schema.feature_schema import features_dict 
 
 OUTPUT_FILE = "output/dfm_results.csv"
 

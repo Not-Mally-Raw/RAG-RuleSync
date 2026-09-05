@@ -4,12 +4,18 @@ import sys
 
 # --- IMPORT LLM CLIENT ---
 try:
-    from llm.client import LLMClient
+    from dfm_rule_pipeline.llm.client import LLMClient
 except ImportError:
-    print("❌ Critical Error: Could not import 'LLMClient' from 'llm.llm_client'.")
-    sys.exit(1)
+    try:
+        from llm.client import LLMClient
+    except ImportError:
+        print("❌ Critical Error: Could not import 'LLMClient'.")
+        sys.exit(1)
 
-from pipeline import run_pipeline
+try:
+    from dfm_rule_pipeline.pipeline import run_pipeline
+except ImportError:
+    from pipeline import run_pipeline
 
 # Configuration
 INPUT_FILE = r"dfm_rule_pipeline\tests\testing.json"
